@@ -1,20 +1,23 @@
-# 系统架构说明
+﻿# 系统架构说明
 
 ## 1. 总体结构
 
 当前项目是一个把浏览器请求转成 `codex exec` 调用的本地 HTTP 服务，分成四层：
 
 1. 页面层
+   
    - 测试页直接内嵌在 [app/codex_http.py](/D:/hft-ai-agent/app/codex_http.py) 的 `TEST_PAGE_HTML` 中。
    - 页面负责采集 `message`、`cwd`、`model`、`continue_context`、`session_id`。
 
 2. API 层
+   
    - FastAPI 提供三个核心接口：
    - `GET /health`
    - `POST /chat`
    - `POST /chat/stream`
 
 3. 执行适配层
+   
    - [app/codex_http.py](/D:/hft-ai-agent/app/codex_http.py) 中的 `CodexExecRunner` 负责：
    - 读取 [`.env`](/D:/hft-ai-agent/.env)
    - 解析 `OPENAI_MODEL`、`OPENAI_BASE_URL`
@@ -23,6 +26,7 @@
    - 提取最终回复、stdout、stderr、session_id
 
 4. 本地状态层
+   
    - 所有 Codex 本地状态统一放在 [`.codex`](/D:/hft-ai-agent/.codex) 下：
    - `auth.json`：登录态
    - `sessions/`：上下文会话
