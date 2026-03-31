@@ -1,1 +1,1 @@
-﻿"""Agent demo package."""
+"""Agent service package."""

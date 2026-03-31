@@ -1,4 +1,4 @@
-﻿from app.codex_http_demo import DEFAULT_PORT, app
+from app.codex_http import DEFAULT_PORT, app
 
 
 if __name__ == "__main__":

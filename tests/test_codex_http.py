@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from app.codex_http_demo import ChatRequest, CodexExecRunner, playground
+from app.codex_http import ChatRequest, CodexExecRunner, PROJECT_ROOT, playground
 
 
 class FakeStream:
@@ -36,7 +36,7 @@ class FakePopen:
         self.returncode = -9
 
 
-class CodexHttpDemoTests(unittest.TestCase):
+class CodexHttpTests(unittest.TestCase):
     def test_playground_should_render_html_page(self) -> None:
         response = playground()
         body = response.body.decode("utf-8")
@@ -78,6 +78,11 @@ class CodexHttpDemoTests(unittest.TestCase):
         self.assertIn("--add-dir", command)
         self.assertIn("Reply with OK", command)
 
+    def test_default_codex_home_should_use_project_dot_codex(self) -> None:
+        runner = CodexExecRunner(codex_command="codex")
+
+        self.assertEqual(runner.default_codex_home, (PROJECT_ROOT / ".codex").resolve())
+
     def test_run_chat_should_return_last_message(self) -> None:
         runner = CodexExecRunner(codex_command="codex", default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"))
         request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent")
@@ -87,7 +92,7 @@ class CodexHttpDemoTests(unittest.TestCase):
             output_path.write_text("OK", encoding="utf-8")
             return subprocess.CompletedProcess(args=command, returncode=0, stdout="stdout", stderr="")
 
-        with patch("app.codex_http_demo.subprocess.run", side_effect=fake_run):
+        with patch("app.codex_http.subprocess.run", side_effect=fake_run):
             response = runner.run_chat(request)
 
         self.assertTrue(response.ok)
@@ -102,7 +107,7 @@ class CodexHttpDemoTests(unittest.TestCase):
         def fake_run(command, cwd, env, capture_output, text, encoding, errors, timeout):
             return subprocess.CompletedProcess(args=command, returncode=1, stdout=None, stderr="stderr fallback")
 
-        with patch("app.codex_http_demo.subprocess.run", side_effect=fake_run):
+        with patch("app.codex_http.subprocess.run", side_effect=fake_run):
             response = runner.run_chat(request)
 
         self.assertFalse(response.ok)
@@ -115,7 +120,7 @@ class CodexHttpDemoTests(unittest.TestCase):
         request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent", timeout_seconds=5)
 
         with patch(
-            "app.codex_http_demo.subprocess.run",
+            "app.codex_http.subprocess.run",
             side_effect=subprocess.TimeoutExpired(cmd=["codex"], timeout=5),
         ):
             response = runner.run_chat(request)
@@ -128,7 +133,7 @@ class CodexHttpDemoTests(unittest.TestCase):
         runner = CodexExecRunner(codex_command="codex", default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"))
         request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent")
 
-        with patch("app.codex_http_demo.subprocess.Popen", new=FakePopen):
+        with patch("app.codex_http.subprocess.Popen", new=FakePopen):
             events = [json.loads(line) for line in runner.stream_chat(request)]
 
         event_types = [event["type"] for event in events]

@@ -14,8 +14,11 @@ venv/
 .env
 .env.local
 
-# Local Codex runtime state
-.codex-http-demo/
+# Project-local Codex state
+.codex/*
+!.codex/skills/
+!.codex/skills/**
+.codex-http/
 .codex-http-test/
 
 # Logs and temporary files

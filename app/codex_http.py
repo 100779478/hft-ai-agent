@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_CODEX_HOME: Optional[Path] = None
+DEFAULT_CODEX_HOME: Optional[Path] = PROJECT_ROOT / ".codex"
 DEFAULT_CWD = PROJECT_ROOT
 DEFAULT_PORT = 8010
 
@@ -26,7 +26,7 @@ TEST_PAGE_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Codex HTTP Demo</title>
+  <title>Codex HTTP Service</title>
   <style>
     :root {
       color-scheme: dark;
@@ -768,7 +768,7 @@ class CodexExecRunner:
 
 
 runner = CodexExecRunner()
-app = FastAPI(title="Codex HTTP Demo")
+app = FastAPI(title="Codex HTTP Service")
 
 
 @app.get("/", response_class=HTMLResponse)
