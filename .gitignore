@@ -1,0 +1,30 @@
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment files
+.env
+.env.local
+
+# Local Codex runtime state
+.codex-http-demo/
+.codex-http-test/
+
+# Logs and temporary files
+*.log
+*.out
+*.err
+*.tmp
+*.temp
+
+# OS/editor files
+.DS_Store
+Thumbs.db
