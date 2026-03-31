@@ -18,6 +18,7 @@ venv/
 .codex/*
 !.codex/skills/
 !.codex/skills/**
+.codex/skills/.system/
 .codex-http/
 .codex-http-test/
 

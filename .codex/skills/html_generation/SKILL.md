@@ -1,4 +1,4 @@
-﻿---
+---
 name: html_generation
 description: 根据结构化需求和 hft-sdk contract 生成 HTML 页面。
 ---

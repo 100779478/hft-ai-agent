@@ -1,4 +1,4 @@
-﻿---
+---
 name: hft_sdk_contract
 description: 把补齐后的业务需求整理为 hft-sdk 可消费的页面契约。
 ---

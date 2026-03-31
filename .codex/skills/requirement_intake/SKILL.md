@@ -1,4 +1,4 @@
-﻿---
+---
 name: requirement_intake
 description: 在生成页面之前先补问关键参数，只要参数不完整就不能直接输出 HTML。
 ---

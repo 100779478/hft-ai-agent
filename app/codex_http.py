@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import queue
+import re
 import shutil
 import subprocess
 import tempfile
@@ -20,6 +21,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CODEX_HOME: Optional[Path] = PROJECT_ROOT / ".codex"
 DEFAULT_CWD = PROJECT_ROOT
 DEFAULT_PORT = 8010
+DEFAULT_DOTENV_PATH = PROJECT_ROOT / ".env"
 
 TEST_PAGE_HTML = """<!doctype html>
 <html lang="en">
@@ -214,10 +216,21 @@ TEST_PAGE_HTML = """<!doctype html>
             <input id="timeout" type="number" min="5" max="3600" value="300" />
           </div>
         </div>
+        <div class="row">
+          <div class="field">
+            <label for="continueContext">context</label>
+            <input id="continueContext" type="checkbox" checked />
+          </div>
+          <div class="field">
+            <label for="contextState">context_state</label>
+            <input id="contextState" value="new session on next request" readonly />
+          </div>
+        </div>
         <div class="actions">
           <button type="button" id="healthBtn" class="secondary">GET /health</button>
           <button type="button" id="chatBtn">POST /chat</button>
           <button type="button" id="streamBtn" class="warn">POST /chat/stream</button>
+          <button type="button" id="resetContextBtn" class="secondary">Reset Context</button>
         </div>
       </section>
       <section class="panel">
@@ -253,8 +266,24 @@ TEST_PAGE_HTML = """<!doctype html>
     const calledStatus = document.getElementById("calledStatus");
     const calledDuration = document.getElementById("calledDuration");
     const httpStatus = document.getElementById("httpStatus");
+    const continueContextInput = document.getElementById("continueContext");
+    const contextStateInput = document.getElementById("contextState");
+    let hasContext = false;
+    let currentSessionId = null;
 
     cwdInput.value = window.location.origin.includes("127.0.0.1") ? "D:\\\\hft-ai-agent" : "";
+
+    function syncContextState() {
+      if (!continueContextInput.checked) {
+        contextStateInput.value = "context disabled";
+      } else if (currentSessionId) {
+        contextStateInput.value = `resume session ${currentSessionId}`;
+      } else if (hasContext) {
+        contextStateInput.value = "resume last session";
+      } else {
+        contextStateInput.value = "new session on next request";
+      }
+    }
 
     function setMeta(endpoint, rawStatus, startedAt, ok) {
       calledApi.textContent = endpoint;
@@ -270,7 +299,9 @@ TEST_PAGE_HTML = """<!doctype html>
         message: messageInput.value,
         cwd: cwdInput.value || null,
         model: modelInput.value || null,
-        timeout_seconds: Number(timeoutInput.value || 300)
+        timeout_seconds: Number(timeoutInput.value || 300),
+        continue_context: continueContextInput.checked && hasContext,
+        session_id: continueContextInput.checked ? currentSessionId : null
       };
     }
 
@@ -287,6 +318,23 @@ TEST_PAGE_HTML = """<!doctype html>
     function appendStream(line) {
       streamOutput.textContent += line;
       streamOutput.scrollTop = streamOutput.scrollHeight;
+    }
+
+    function updateContextFromResponse(response) {
+      if (response && response.session_id) {
+        currentSessionId = response.session_id;
+        hasContext = true;
+      } else if (response && response.ok !== false) {
+        hasContext = true;
+      }
+      syncContextState();
+    }
+
+    function resetContext() {
+      hasContext = false;
+      currentSessionId = null;
+      syncContextState();
+      statusText.textContent = "Context reset";
     }
 
     async function callHealth() {
@@ -309,6 +357,7 @@ TEST_PAGE_HTML = """<!doctype html>
         body: JSON.stringify(payload)
       });
       const data = await resp.json();
+      updateContextFromResponse(data);
       render("/chat", data, startedAt, payload, resp.status);
     }
 
@@ -365,11 +414,16 @@ TEST_PAGE_HTML = """<!doctype html>
       }
 
       if (finalResult) {
+        updateContextFromResponse(finalResult);
         render("/chat/stream", finalResult, startedAt, payload, resp.status);
       } else {
         setMeta("/chat/stream", resp.status, startedAt, false);
       }
     }
+
+    continueContextInput.addEventListener("change", () => {
+      syncContextState();
+    });
 
     document.getElementById("healthBtn").addEventListener("click", () => {
       callHealth().catch((error) => {
@@ -391,6 +445,11 @@ TEST_PAGE_HTML = """<!doctype html>
         output.textContent = String(error);
       });
     });
+    document.getElementById("resetContextBtn").addEventListener("click", () => {
+      resetContext();
+    });
+
+    syncContextState();
   </script>
 </body>
 </html>
@@ -408,7 +467,12 @@ class ChatRequest(BaseModel):
         description="Pass --dangerously-bypass-approvals-and-sandbox",
     )
     skip_git_repo_check: bool = Field(default=True, description="Allow running outside git repos")
-    ephemeral: bool = Field(default=True, description="Do not persist Codex session files")
+    continue_context: bool = Field(
+        default=False,
+        description="Resume the most recent recorded Codex session for this project",
+    )
+    session_id: Optional[str] = Field(default=None, description="Resume a specific Codex session id")
+    ephemeral: bool = Field(default=False, description="Do not persist session files")
     add_dirs: list[str] = Field(default_factory=list, description="Additional writable directories")
     timeout_seconds: int = Field(default=300, ge=5, le=3600)
     codex_home: Optional[str] = Field(default=None, description="Override CODEX_HOME for the subprocess")
@@ -422,6 +486,10 @@ class ChatResponse(BaseModel):
     cwd: str
     codex_home: str
     command: list[str]
+    resume_mode: str
+    session_id: Optional[str]
+    effective_model: Optional[str]
+    effective_openai_base_url: Optional[str]
     stdout: str
     stderr: str
 
@@ -433,6 +501,10 @@ class HealthResponse(BaseModel):
     codex_home: str
     default_cwd: str
     command: str
+    dotenv_path: str
+    dotenv_exists: bool
+    effective_model: Optional[str]
+    effective_openai_base_url: Optional[str]
 
 
 class CodexExecRunner:
@@ -442,18 +514,21 @@ class CodexExecRunner:
         codex_command: Optional[str] = None,
         default_cwd: Path = DEFAULT_CWD,
         default_codex_home: Optional[Path] = DEFAULT_CODEX_HOME,
+        dotenv_path: Optional[Path] = DEFAULT_DOTENV_PATH,
     ) -> None:
         self.codex_command = self._resolve_codex_command(codex_command or os.getenv("CODEX_HTTP_COMMAND"))
         self.default_cwd = Path(default_cwd)
         self.default_codex_home = Path(default_codex_home).resolve() if default_codex_home else None
+        self.dotenv_path = Path(dotenv_path).resolve() if dotenv_path else None
 
     def health(self) -> HealthResponse:
         codex_home = self._resolve_codex_home(None)
+        env = self._build_env(codex_home)
         try:
             completed = subprocess.run(
                 [self.codex_command, "--version"],
                 cwd=str(self.default_cwd),
-                env=self._build_env(codex_home),
+                env=env,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
@@ -468,6 +543,10 @@ class CodexExecRunner:
                 codex_home=self._display_codex_home(codex_home),
                 default_cwd=str(self.default_cwd),
                 command=self.codex_command,
+                dotenv_path=self._display_dotenv_path(),
+                dotenv_exists=self._dotenv_exists(),
+                effective_model=self._effective_model(None),
+                effective_openai_base_url=self._effective_openai_base_url(),
             )
         except Exception as exc:
             return HealthResponse(
@@ -477,6 +556,10 @@ class CodexExecRunner:
                 codex_home=self._display_codex_home(codex_home),
                 default_cwd=str(self.default_cwd),
                 command=self.codex_command,
+                dotenv_path=self._display_dotenv_path(),
+                dotenv_exists=self._dotenv_exists(),
+                effective_model=self._effective_model(None),
+                effective_openai_base_url=self._effective_openai_base_url(),
             )
 
     def run_chat(self, payload: ChatRequest) -> ChatResponse:
@@ -485,6 +568,7 @@ class CodexExecRunner:
 
         with self._temporary_directory(codex_home) as temp_dir:
             last_message_path = Path(temp_dir) / "last_message.txt"
+            resume_mode = self._resolve_resume_mode(payload)
             command = self._build_command(payload=payload, cwd=cwd, last_message_path=last_message_path)
             env = self._build_env(codex_home)
             started_at = time.perf_counter()
@@ -503,6 +587,8 @@ class CodexExecRunner:
                 reply = self._read_last_message(last_message_path)
                 if not reply:
                     reply = self._combine_output(completed.stdout, completed.stderr).strip()
+                stdout_text = self._safe_output(completed.stdout)
+                stderr_text = self._safe_output(completed.stderr)
                 return self._build_chat_response(
                     cwd=cwd,
                     codex_home=codex_home,
@@ -510,11 +596,15 @@ class CodexExecRunner:
                     reply=reply,
                     exit_code=completed.returncode,
                     duration_ms=duration_ms,
-                    stdout=self._safe_output(completed.stdout),
-                    stderr=self._safe_output(completed.stderr),
+                    resume_mode=resume_mode,
+                    session_id=self._extract_session_id(stdout_text, stderr_text),
+                    stdout=stdout_text,
+                    stderr=stderr_text,
                 )
             except subprocess.TimeoutExpired as exc:
                 duration_ms = int((time.perf_counter() - started_at) * 1000)
+                stdout_text = self._safe_output(exc.stdout)
+                stderr_text = self._safe_output(exc.stderr)
                 return self._build_chat_response(
                     cwd=cwd,
                     codex_home=codex_home,
@@ -522,8 +612,10 @@ class CodexExecRunner:
                     reply=f"Codex exec timed out after {payload.timeout_seconds}s.",
                     exit_code=-1,
                     duration_ms=duration_ms,
-                    stdout=self._safe_output(exc.stdout),
-                    stderr=self._safe_output(exc.stderr),
+                    resume_mode=resume_mode,
+                    session_id=self._extract_session_id(stdout_text, stderr_text),
+                    stdout=stdout_text,
+                    stderr=stderr_text,
                 )
 
     def stream_chat(self, payload: ChatRequest) -> Iterator[str]:
@@ -532,6 +624,7 @@ class CodexExecRunner:
 
         with self._temporary_directory(codex_home) as temp_dir:
             last_message_path = Path(temp_dir) / "last_message.txt"
+            resume_mode = self._resolve_resume_mode(payload)
             command = self._build_command(payload=payload, cwd=cwd, last_message_path=last_message_path)
             env = self._build_env(codex_home)
             started_at = time.perf_counter()
@@ -542,6 +635,7 @@ class CodexExecRunner:
                         "command": command,
                         "cwd": str(cwd),
                         "codex_home": self._display_codex_home(codex_home),
+                        "resume_mode": resume_mode,
                     },
                 }
             )
@@ -567,6 +661,8 @@ class CodexExecRunner:
                     reply=str(exc),
                     exit_code=-1,
                     duration_ms=duration_ms,
+                    resume_mode=resume_mode,
+                    session_id=self._extract_session_id("", str(exc)),
                     stdout="",
                     stderr=str(exc),
                 )
@@ -589,6 +685,8 @@ class CodexExecRunner:
                     process.kill()
                     process.wait(timeout=5)
                     duration_ms = int((time.perf_counter() - started_at) * 1000)
+                    stdout_text = "".join(stdout_chunks)
+                    stderr_text = "".join(stderr_chunks)
                     response = self._build_chat_response(
                         cwd=cwd,
                         codex_home=codex_home,
@@ -596,8 +694,10 @@ class CodexExecRunner:
                         reply=f"Codex exec timed out after {payload.timeout_seconds}s.",
                         exit_code=-1,
                         duration_ms=duration_ms,
-                        stdout="".join(stdout_chunks),
-                        stderr="".join(stderr_chunks),
+                        resume_mode=resume_mode,
+                        session_id=self._extract_session_id(stdout_text, stderr_text),
+                        stdout=stdout_text,
+                        stderr=stderr_text,
                     )
                     yield self._json_line({"type": "result", "data": self._chat_response_to_dict(response)})
                     return
@@ -622,6 +722,8 @@ class CodexExecRunner:
             reply = self._read_last_message(last_message_path)
             if not reply:
                 reply = ("".join(stdout_chunks) or "".join(stderr_chunks)).strip()
+            stdout_text = "".join(stdout_chunks)
+            stderr_text = "".join(stderr_chunks)
             response = self._build_chat_response(
                 cwd=cwd,
                 codex_home=codex_home,
@@ -629,31 +731,58 @@ class CodexExecRunner:
                 reply=reply,
                 exit_code=exit_code,
                 duration_ms=duration_ms,
-                stdout="".join(stdout_chunks),
-                stderr="".join(stderr_chunks),
+                resume_mode=resume_mode,
+                session_id=self._extract_session_id(stdout_text, stderr_text),
+                stdout=stdout_text,
+                stderr=stderr_text,
             )
             yield self._json_line({"type": "result", "data": self._chat_response_to_dict(response)})
 
     def _build_command(self, *, payload: ChatRequest, cwd: Path, last_message_path: Path) -> list[str]:
-        command = [self.codex_command, "exec", "--output-last-message", str(last_message_path)]
+        resume_mode = self._resolve_resume_mode(payload)
+        effective_model = self._effective_model(payload.model)
+        effective_openai_base_url = self._effective_openai_base_url()
+        if resume_mode == "new":
+            command = [self.codex_command, "exec", "--output-last-message", str(last_message_path)]
+            if effective_openai_base_url:
+                command.extend(["-c", self._config_string_value("openai_base_url", effective_openai_base_url)])
+            if payload.ephemeral:
+                command.append("--ephemeral")
+            if payload.skip_git_repo_check:
+                command.append("--skip-git-repo-check")
+            if payload.profile:
+                command.extend(["-p", payload.profile])
+            if effective_model:
+                command.extend(["-m", effective_model])
+            if payload.dangerously_bypass_approvals_and_sandbox:
+                command.append("--dangerously-bypass-approvals-and-sandbox")
+            elif payload.full_auto:
+                command.append("--full-auto")
+            command.extend(["-C", str(cwd)])
+            for directory in payload.add_dirs:
+                command.extend(["--add-dir", str(Path(directory).resolve())])
+            command.append(payload.message)
+            return command
+
+        command = [self.codex_command, "exec", "resume", "--output-last-message", str(last_message_path)]
+        if effective_openai_base_url:
+            command.extend(["-c", self._config_string_value("openai_base_url", effective_openai_base_url)])
         if payload.ephemeral:
             command.append("--ephemeral")
         if payload.skip_git_repo_check:
             command.append("--skip-git-repo-check")
-        if payload.profile:
-            command.extend(["-p", payload.profile])
-        if payload.model:
-            command.extend(["-m", payload.model])
+        if effective_model:
+            command.extend(["-m", effective_model])
         if payload.dangerously_bypass_approvals_and_sandbox:
             command.append("--dangerously-bypass-approvals-and-sandbox")
         elif payload.full_auto:
             command.append("--full-auto")
-        command.extend(["-C", str(cwd)])
-        for directory in payload.add_dirs:
-            command.extend(["--add-dir", str(Path(directory).resolve())])
+        if resume_mode == "session_id":
+            command.append(str(payload.session_id))
+        else:
+            command.append("--last")
         command.append(payload.message)
         return command
-
     def _build_chat_response(
         self,
         *,
@@ -663,6 +792,8 @@ class CodexExecRunner:
         reply: str,
         exit_code: int,
         duration_ms: int,
+        resume_mode: str,
+        session_id: Optional[str],
         stdout: str,
         stderr: str,
     ) -> ChatResponse:
@@ -674,6 +805,10 @@ class CodexExecRunner:
             cwd=str(cwd),
             codex_home=self._display_codex_home(codex_home),
             command=command,
+            resume_mode=resume_mode,
+            session_id=session_id,
+            effective_model=self._extract_model_from_command(command),
+            effective_openai_base_url=self._effective_openai_base_url(),
             stdout=stdout,
             stderr=stderr,
         )
@@ -687,9 +822,27 @@ class CodexExecRunner:
             "cwd": response.cwd,
             "codex_home": response.codex_home,
             "command": response.command,
+            "resume_mode": response.resume_mode,
+            "session_id": response.session_id,
+            "effective_model": response.effective_model,
+            "effective_openai_base_url": response.effective_openai_base_url,
             "stdout": response.stdout,
             "stderr": response.stderr,
         }
+
+    def _resolve_resume_mode(self, payload: ChatRequest) -> str:
+        if payload.session_id:
+            return "session_id"
+        if payload.continue_context:
+            return "last"
+        return "new"
+
+    def _extract_session_id(self, stdout: str, stderr: str) -> Optional[str]:
+        combined = f"{stdout}\n{stderr}"
+        match = re.search(r"session id:\s*([0-9a-fA-F-]{36})", combined)
+        if match:
+            return match.group(1)
+        return None
 
     def _pump_stream(self, stream: Optional[object], source: str, output_queue: queue.Queue[tuple[str, str]]) -> None:
         try:
@@ -726,15 +879,78 @@ class CodexExecRunner:
         return tempfile.TemporaryDirectory()
 
     def _build_env(self, codex_home: Optional[Path]) -> dict[str, str]:
-        env = os.environ.copy()
+        env = self._load_dotenv()
+        env.update(os.environ)
+        base_url = env.get("OPENAI_BASE_URL") or env.get("OPENAI_API_BASE")
+        if base_url:
+            env.setdefault("OPENAI_BASE_URL", base_url)
+            env.setdefault("OPENAI_API_BASE", base_url)
         if codex_home is not None:
             env["CODEX_HOME"] = str(codex_home)
         return env
+
+    def _load_dotenv(self) -> dict[str, str]:
+        if self.dotenv_path is None or not self.dotenv_path.exists():
+            return {}
+
+        env: dict[str, str] = {}
+        content = self.dotenv_path.read_text(encoding="utf-8-sig", errors="ignore")
+        for raw_line in content.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[7:].strip()
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            if not key:
+                continue
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+                value = value[1:-1]
+            env[key] = value
+        return env
+
+    def _effective_model(self, request_model: Optional[str]) -> Optional[str]:
+        if request_model:
+            return request_model
+        env = self._load_dotenv()
+        return os.environ.get("OPENAI_MODEL") or env.get("OPENAI_MODEL")
+
+    def _effective_openai_base_url(self) -> Optional[str]:
+        env = self._load_dotenv()
+        return (
+            os.environ.get("OPENAI_BASE_URL")
+            or os.environ.get("OPENAI_API_BASE")
+            or env.get("OPENAI_BASE_URL")
+            or env.get("OPENAI_API_BASE")
+        )
+
+    def _extract_model_from_command(self, command: list[str]) -> Optional[str]:
+        if "-m" not in command:
+            return None
+        index = command.index("-m") + 1
+        if index >= len(command):
+            return None
+        return command[index]
+
+    def _config_string_value(self, key: str, value: str) -> str:
+        return f"{key}={json.dumps(value, ensure_ascii=False)}"
 
     def _display_codex_home(self, codex_home: Optional[Path]) -> str:
         if codex_home is not None:
             return str(codex_home)
         return "<inherit default ~/.codex>"
+
+    def _display_dotenv_path(self) -> str:
+        if self.dotenv_path is not None:
+            return str(self.dotenv_path)
+        return "<disabled>"
+
+    def _dotenv_exists(self) -> bool:
+        return self.dotenv_path is not None and self.dotenv_path.exists()
 
     def _safe_output(self, value: object) -> str:
         if value is None:
