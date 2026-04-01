@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HTML 对话工作台</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b10;
+      --panel: rgba(19, 24, 33, 0.92);
+      --panel-strong: rgba(15, 19, 27, 0.94);
+      --panel-soft: rgba(11, 16, 24, 0.88);
+      --line: #223244;
+      --line-soft: rgba(49, 80, 106, 0.48);
+      --text: #e4edf7;
+      --muted: #8ea2b7;
+      --accent: #6ef2ff;
+      --accent-soft: rgba(44, 200, 195, 0.14);
+      --user-bg: linear-gradient(180deg, rgba(33, 50, 70, 0.98), rgba(28, 42, 58, 0.98));
+      --assistant-bg: rgba(23, 30, 41, 0.96);
+      --danger: rgba(255, 122, 134, 0.5);
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
+      --scrollbar: 6px;
+    }
+
+    * { box-sizing: border-box; }
+    *::-webkit-scrollbar { width: var(--scrollbar); height: var(--scrollbar); }
+    *::-webkit-scrollbar-thumb { background: #34506a; border-radius: 999px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(110, 231, 242, 0.08), transparent 24%),
+        linear-gradient(180deg, #0b0e13 0%, #0d1016 100%);
+      color: var(--text);
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    .app {
+      width: min(1360px, 100vw);
+      height: 100vh;
+      height: 100dvh;
+      margin: 0 auto;
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .header,
+    .panel {
+      border: 1px solid rgba(60, 73, 95, 0.72);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 56px;
+      padding: 12px 18px;
+    }
+
+    .headline {
+      min-width: 0;
+    }
+
+    .headline h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+    }
+
+    .headline p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meta {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 32px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(15, 20, 28, 0.92);
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .chip b {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(44, 54, 71, 0.86);
+      background: var(--panel-strong);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .panel-title strong {
+      color: var(--text);
+      font-size: 14px;
+      letter-spacing: 0.02em;
+    }
+
+    .chat-log {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 120px),
+        rgba(12, 16, 23, 0.68);
+    }
+
+    .empty-state {
+      border: 1px dashed rgba(55, 82, 108, 0.74);
+      border-radius: 12px;
+      padding: 18px;
+      background: rgba(11, 18, 27, 0.72);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .message {
+      align-self: flex-start;
+      width: min(1080px, 94%);
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--assistant-bg);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: var(--user-bg);
+      border-color: #48607c;
+    }
+
+    .message.system {
+      width: 100%;
+      border-style: dashed;
+      background: rgba(23, 30, 40, 0.88);
+    }
+
+    .message.error {
+      border-color: var(--danger);
+      background: rgba(65, 22, 30, 0.64);
+    }
+
+    .message-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+
+    .message-body {
+      display: grid;
+      gap: 12px;
+    }
+
+    .markdown-root {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.78;
+      word-break: break-word;
+    }
+
+    .markdown-root > :first-child { margin-top: 0; }
+    .markdown-root > :last-child { margin-bottom: 0; }
+
+    .markdown-root p,
+    .markdown-root ul,
+    .markdown-root ol,
+    .markdown-root blockquote,
+    .markdown-root pre,
+    .markdown-root h1,
+    .markdown-root h2,
+    .markdown-root h3,
+    .markdown-root h4,
+    .markdown-root h5,
+    .markdown-root h6 {
+      margin: 0 0 12px;
+    }
+
+    .markdown-root h1,
+    .markdown-root h2,
+    .markdown-root h3,
+    .markdown-root h4,
+    .markdown-root h5,
+    .markdown-root h6 {
+      color: #f4f8fc;
+      line-height: 1.45;
+    }
+
+    .markdown-root h1 { font-size: 20px; }
+    .markdown-root h2 { font-size: 18px; }
+    .markdown-root h3 { font-size: 16px; }
+    .markdown-root h4,
+    .markdown-root h5,
+    .markdown-root h6 { font-size: 14px; }
+
+    .markdown-root ul,
+    .markdown-root ol {
+      padding-left: 20px;
+    }
+
+    .markdown-root li + li {
+      margin-top: 4px;
+    }
+
+    .markdown-root a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .markdown-root a:hover {
+      text-decoration: underline;
+    }
+
+    .markdown-root code {
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(110, 231, 242, 0.1);
+      color: #d6fbff;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    .markdown-root blockquote {
+      padding: 10px 12px;
+      border-left: 3px solid rgba(110, 231, 242, 0.34);
+      border-radius: 10px;
+      background: rgba(9, 15, 23, 0.82);
+      color: #c7d5e4;
+    }
+
+    .code-block {
+      border: 1px solid rgba(43, 63, 84, 0.75);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(9, 15, 23, 0.92);
+    }
+
+    .code-label {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(43, 63, 84, 0.75);
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: rgba(11, 18, 27, 0.88);
+    }
+
+    .code-block pre {
+      margin: 0;
+      max-height: 360px;
+      overflow: auto;
+      padding: 12px;
+      background: rgba(5, 10, 15, 0.96);
+      color: #d8e8fa;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .artifact-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .artifact-list.hidden {
+      display: none;
+    }
+
+    .artifact-card {
+      border-top: 1px solid var(--line-soft);
+      padding-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .artifact-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .artifact-card-title {
+      display: grid;
+      gap: 3px;
+    }
+
+    .artifact-card-title strong {
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .artifact-card-title span {
+      font-size: 11px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .artifact-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .artifact-tab-btn {
+      min-height: 32px;
+      padding: 0 12px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .artifact-tab-btn.active {
+      border-color: rgba(110, 231, 242, 0.34);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .artifact-view {
+      display: none;
+      border: 1px solid rgba(43, 63, 84, 0.75);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(9, 15, 23, 0.92);
+    }
+
+    .artifact-view.active {
+      display: block;
+    }
+
+    .artifact-download {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .artifact-download p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .artifact-preview {
+      padding: 0;
+    }
+
+    .artifact-preview iframe {
+      display: block;
+      width: 100%;
+      height: 360px;
+      border: 0;
+      background: #ffffff;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 16px;
+      border-radius: 12px;
+      border: 1px solid #4f637d;
+      background: linear-gradient(180deg, #202a38, #17202c);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, opacity 120ms ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: #6982a3;
+    }
+
+    .btn:disabled {
+      opacity: 0.46;
+      cursor: not-allowed;
+    }
+
+    .btn.send {
+      min-width: 120px;
+      border-color: rgba(110, 231, 242, 0.44);
+      background: linear-gradient(180deg, rgba(57, 84, 115, 0.98), rgba(33, 50, 70, 0.98));
+    }
+
+    .composer {
+      padding: 14px 18px 18px;
+      border-top: 1px solid rgba(44, 54, 71, 0.86);
+      background: var(--panel-strong);
+    }
+
+    .composer-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .composer textarea {
+      width: 100%;
+      min-height: 84px;
+      max-height: 180px;
+      padding: 14px 16px;
+      resize: none;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(17, 22, 30, 0.96);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      line-height: 1.7;
+      outline: none;
+    }
+
+    .composer textarea:focus {
+      border-color: rgba(110, 231, 242, 0.44);
+      box-shadow: 0 0 0 1px rgba(110, 231, 242, 0.18);
+    }
+
+    .composer-footnote {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 720px) {
+      .app { padding: 10px; gap: 10px; }
+      .header { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
+      .headline p { white-space: normal; }
+      .message { width: 100%; }
+      .composer-wrap { grid-template-columns: 1fr; }
+      .btn.send { width: 100%; }
+      .artifact-card-header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="headline">
+        <h1>HTML 对话工作台</h1>
+        <p>默认调用 `/chat/stream`，按 URL 中的 `customerid` 绑定长会话，聊天消息按 Markdown 展示，识别到 HTML 时在消息内联预览与下载。</p>
+      </div>
+      <div class="meta">
+        <div class="chip">当前用户 <b id="customerIdChip">admin</b></div>
+      </div>
+    </header>
+
+    <main class="panel">
+      <div class="panel-title">
+        <strong>对话</strong>
+        <span id="statusText">就绪</span>
+      </div>
+      <div class="chat-log" id="chatLog">
+        <div class="empty-state" id="emptyState">
+          输入需求后直接发送。<br />
+          聊天内容会按 Markdown 展示；如果回复中包含完整 HTML 或 ` ```html ` 代码块，会在对应消息下方追加产物卡片，支持预览与下载。
+        </div>
+      </div>
+      <div class="composer">
+        <div class="composer-wrap">
+          <textarea id="messageInput" placeholder="例如：生成一个中文深色聊天页，并把完整代码放在 ```html``` 代码块中。"></textarea>
+          <button class="btn send" id="sendBtn" type="button">发送</button>
+        </div>
+        <div class="composer-footnote">
+          回车换行，Ctrl/Cmd + 回车发送。页面会自动把 `customerid` 作为会话别名传给后端，并在同一会话里持续生成多个 HTML 页面。
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const DEFAULT_CWD = __DEFAULT_CWD__;
+    const searchParams = new URLSearchParams(window.location.search);
+    const customerId = (searchParams.get("customerid") || "admin").trim() || "admin";
+
+    const chatLog = document.getElementById("chatLog");
+    const emptyState = document.getElementById("emptyState");
+    const messageInput = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const statusText = document.getElementById("statusText");
+    const customerIdChip = document.getElementById("customerIdChip");
+
+    let isSending = false;
+    let pendingAssistantEntry = null;
+    let artifactSequence = 0;
+
+    customerIdChip.textContent = customerId;
+
+    function setStatus(text) {
+      statusText.textContent = text;
+    }
+
+    function nowLabel() {
+      return new Date().toLocaleTimeString("zh-CN", { hour12: false });
+    }
+
+    function roleLabel(role) {
+      if (role === "user") {
+        return "我";
+      }
+      if (role === "assistant") {
+        return "助手";
+      }
+      return "系统";
+    }
+
+    function scrollChatToBottom() {
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function resizeComposer() {
+      messageInput.style.height = "auto";
+      messageInput.style.height = `${Math.min(messageInput.scrollHeight, 180)}px`;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderInlineMarkdown(text) {
+      return escapeHtml(text)
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>')
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+        .replace(/`([^`\n]+)`/g, "<code>$1</code>");
+    }
+
+    function appendMarkdownBlocks(container, text) {
+      const normalized = text.replace(/\r/g, "");
+      const blocks = normalized.split(/\n{2,}/).filter((block) => block.trim());
+
+      blocks.forEach((block) => {
+        const trimmed = block.trim();
+        const lines = block.split("\n").filter((line) => line.trim() !== "");
+        if (!lines.length) {
+          return;
+        }
+
+        const heading = trimmed.match(/^(#{1,6})\s+(.+)$/);
+        if (heading) {
+          const element = document.createElement(`h${heading[1].length}`);
+          element.innerHTML = renderInlineMarkdown(heading[2].trim());
+          container.appendChild(element);
+          return;
+        }
+
+        if (lines.every((line) => /^\s*>\s?/.test(line))) {
+          const quote = document.createElement("blockquote");
+          quote.innerHTML = lines
+            .map((line) => renderInlineMarkdown(line.replace(/^\s*>\s?/, "")))
+            .join("<br />");
+          container.appendChild(quote);
+          return;
+        }
+
+        if (lines.every((line) => /^\s*[-*]\s+/.test(line))) {
+          const list = document.createElement("ul");
+          lines.forEach((line) => {
+            const item = document.createElement("li");
+            item.innerHTML = renderInlineMarkdown(line.replace(/^\s*[-*]\s+/, ""));
+            list.appendChild(item);
+          });
+          container.appendChild(list);
+          return;
+        }
+
+        if (lines.every((line) => /^\s*\d+\.\s+/.test(line))) {
+          const list = document.createElement("ol");
+          lines.forEach((line) => {
+            const item = document.createElement("li");
+            item.innerHTML = renderInlineMarkdown(line.replace(/^\s*\d+\.\s+/, ""));
+            list.appendChild(item);
+          });
+          container.appendChild(list);
+          return;
+        }
+
+        const paragraph = document.createElement("p");
+        paragraph.innerHTML = lines.map((line) => renderInlineMarkdown(line)).join("<br />");
+        container.appendChild(paragraph);
+      });
+    }
+
+    function renderMarkdown(container, text) {
+      container.innerHTML = "";
+      const normalized = String(text || "").replace(/\r/g, "");
+      if (!normalized.trim()) {
+        return;
+      }
+
+      const fencePattern = /```([a-zA-Z0-9_-]*)[ \t]*\n([\s\S]*?)```/g;
+      let lastIndex = 0;
+      let match = null;
+
+      while ((match = fencePattern.exec(normalized)) !== null) {
+        appendMarkdownBlocks(container, normalized.slice(lastIndex, match.index));
+
+        const codeBlock = document.createElement("section");
+        codeBlock.className = "code-block";
+
+        const label = document.createElement("div");
+        label.className = "code-label";
+        label.textContent = (match[1] || "text").toLowerCase();
+
+        const pre = document.createElement("pre");
+        const code = document.createElement("code");
+        code.textContent = (match[2] || "").replace(/\n$/, "");
+        pre.appendChild(code);
+
+        codeBlock.append(label, pre);
+        container.appendChild(codeBlock);
+        lastIndex = match.index + match[0].length;
+      }
+
+      appendMarkdownBlocks(container, normalized.slice(lastIndex));
+    }
+
+    function appendMessage(role, text, extraClass) {
+      emptyState.style.display = "none";
+      const message = document.createElement("article");
+      message.className = `message ${role}${extraClass ? ` ${extraClass}` : ""}`;
+
+      const meta = document.createElement("div");
+      meta.className = "message-meta";
+      meta.innerHTML = `<span>${roleLabel(role)}</span><span>${nowLabel()}</span>`;
+
+      const body = document.createElement("div");
+      body.className = "message-body";
+
+      const markdown = document.createElement("div");
+      markdown.className = "markdown-root";
+
+      const artifacts = document.createElement("div");
+      artifacts.className = "artifact-list hidden";
+
+      body.append(markdown, artifacts);
+      message.append(meta, body);
+      chatLog.appendChild(message);
+
+      const entry = { message, markdown, artifacts };
+      renderMessageContent(entry, text);
+      return entry;
+    }
+
+    function isHtmlDocument(text) {
+      return /<!doctype html|<html[\s>]|<body[\s>]|<head[\s>]/i.test(text);
+    }
+
+    function normalizeHtmlArtifact(text) {
+      return String(text || "").replace(/\r/g, "").trim();
+    }
+
+    function buildArtifactFileName() {
+      artifactSequence += 1;
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+      return `${customerId}-html-${String(artifactSequence).padStart(3, "0")}-${stamp}.html`;
+    }
+
+    function extractHtmlArtifacts(reply) {
+      const normalizedReply = String(reply || "").replace(/\r/g, "");
+      const artifacts = [];
+      const seen = new Set();
+      const fencePattern = /```([a-zA-Z0-9_-]*)[ \t]*\n([\s\S]*?)```/g;
+      let match = null;
+
+      while ((match = fencePattern.exec(normalizedReply)) !== null) {
+        const lang = (match[1] || "").toLowerCase();
+        const html = normalizeHtmlArtifact(match[2] || "");
+        if (!html || !(lang === "html" || isHtmlDocument(html)) || seen.has(html)) {
+          continue;
+        }
+        seen.add(html);
+        artifacts.push({ html, fileName: buildArtifactFileName() });
+      }
+
+      if (!artifacts.length) {
+        const documentPattern = /<!doctype html[\s\S]*?<\/html>|<html[\s\S]*?<\/html>/ig;
+        while ((match = documentPattern.exec(normalizedReply)) !== null) {
+          const html = normalizeHtmlArtifact(match[0]);
+          if (!html || seen.has(html)) {
+            continue;
+          }
+          seen.add(html);
+          artifacts.push({ html, fileName: buildArtifactFileName() });
+        }
+      }
+
+      return artifacts;
+    }
+
+    function downloadHtml(html, fileName) {
+      const blob = new Blob([normalizeHtmlArtifact(html)], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function createArtifactCard(artifact, index) {
+      const card = document.createElement("section");
+      card.className = "artifact-card";
+
+      const header = document.createElement("div");
+      header.className = "artifact-card-header";
+
+      const title = document.createElement("div");
+      title.className = "artifact-card-title";
+      title.innerHTML = `<strong>HTML 产物 ${index + 1}</strong><span>${artifact.fileName}</span>`;
+
+      const tabs = document.createElement("div");
+      tabs.className = "artifact-tabs";
+
+      const downloadTabButton = document.createElement("button");
+      downloadTabButton.type = "button";
+      downloadTabButton.className = "artifact-tab-btn";
+      downloadTabButton.textContent = "下载";
+      downloadTabButton.dataset.inlineTab = "download";
+
+      const previewTabButton = document.createElement("button");
+      previewTabButton.type = "button";
+      previewTabButton.className = "artifact-tab-btn";
+      previewTabButton.textContent = "预览";
+      previewTabButton.dataset.inlineTab = "preview";
+
+      tabs.append(downloadTabButton, previewTabButton);
+      header.append(title, tabs);
+
+      const downloadView = document.createElement("div");
+      downloadView.className = "artifact-view artifact-download";
+      downloadView.dataset.inlineView = "download";
+
+      const description = document.createElement("p");
+      description.textContent = "已识别到完整 HTML 页面。当前消息仍保留 Markdown 原文，下面可以直接下载单文件版本。";
+
+      const downloadButton = document.createElement("button");
+      downloadButton.type = "button";
+      downloadButton.className = "btn";
+      downloadButton.textContent = "下载 HTML";
+      downloadButton.addEventListener("click", () => {
+        downloadHtml(artifact.html, artifact.fileName);
+      });
+
+      downloadView.append(description, downloadButton);
+
+      const previewView = document.createElement("div");
+      previewView.className = "artifact-view artifact-preview";
+      previewView.dataset.inlineView = "preview";
+
+      const iframe = document.createElement("iframe");
+      iframe.title = `${artifact.fileName} 预览`;
+      iframe.srcdoc = artifact.html;
+      previewView.appendChild(iframe);
+
+      function setActiveInlineTab(name) {
+        [downloadTabButton, previewTabButton].forEach((button) => {
+          button.classList.toggle("active", button.dataset.inlineTab === name);
+        });
+        [downloadView, previewView].forEach((view) => {
+          view.classList.toggle("active", view.dataset.inlineView === name);
+        });
+      }
+
+      downloadTabButton.addEventListener("click", () => setActiveInlineTab("download"));
+      previewTabButton.addEventListener("click", () => setActiveInlineTab("preview"));
+      setActiveInlineTab("preview");
+
+      card.append(header, downloadView, previewView);
+      return card;
+    }
+
+    function renderArtifactCards(container, artifacts) {
+      container.innerHTML = "";
+      if (!artifacts.length) {
+        container.classList.add("hidden");
+        return;
+      }
+
+      container.classList.remove("hidden");
+      artifacts.forEach((artifact, index) => {
+        container.appendChild(createArtifactCard(artifact, index));
+      });
+    }
+
+    function renderMessageContent(entry, text) {
+      renderMarkdown(entry.markdown, text);
+      renderArtifactCards(entry.artifacts, extractHtmlArtifacts(text));
+      scrollChatToBottom();
+    }
+
+    function buildPayload(message) {
+      return {
+        message,
+        cwd: DEFAULT_CWD,
+        continue_context: true,
+        session_id: customerId
+      };
+    }
+
+    function splitBuffer(buffer) {
+      const lines = [];
+      let rest = buffer;
+      while (true) {
+        const index = rest.indexOf("\n");
+        if (index === -1) {
+          return { lines, rest };
+        }
+        lines.push(rest.slice(0, index));
+        rest = rest.slice(index + 1);
+      }
+    }
+
+    async function streamChat(message) {
+      const payload = buildPayload(message);
+      const response = await fetch("/chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.body) {
+        throw new Error("当前浏览器未返回可读取的流。");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let finalResult = null;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const chunk = splitBuffer(buffer);
+        buffer = chunk.rest;
+        for (const rawLine of chunk.lines) {
+          const line = rawLine.trim();
+          if (!line) {
+            continue;
+          }
+          const event = JSON.parse(line);
+          if (event.type === "stdout" || event.type === "stderr") {
+            renderMessageContent(pendingAssistantEntry, "处理中...\n正在接收执行输出。");
+          } else if (event.type === "result") {
+            finalResult = event.data;
+          }
+        }
+      }
+
+      if (buffer.trim()) {
+        const event = JSON.parse(buffer.trim());
+        if (event.type === "result") {
+          finalResult = event.data;
+        }
+      }
+
+      if (!response.ok) {
+        const detail = finalResult && finalResult.reply ? finalResult.reply : `HTTP ${response.status}`;
+        throw new Error(detail);
+      }
+
+      if (!finalResult) {
+        throw new Error("流式响应结束，但未收到最终结果。");
+      }
+
+      return finalResult;
+    }
+
+    async function handleSend() {
+      const message = messageInput.value.trim();
+      if (!message || isSending) {
+        return;
+      }
+
+      appendMessage("user", message);
+      pendingAssistantEntry = appendMessage("assistant", "处理中...");
+      messageInput.value = "";
+      resizeComposer();
+      messageInput.focus();
+      isSending = true;
+      sendBtn.disabled = true;
+      setStatus("发送中");
+
+      try {
+        const result = await streamChat(message);
+        const reply = result.reply || "未收到回复。";
+        renderMessageContent(pendingAssistantEntry, reply);
+        if (result.ok === false) {
+          pendingAssistantEntry.message.classList.add("error");
+        }
+        setStatus(result.ok === false ? "失败" : "就绪");
+      } catch (error) {
+        const text = error instanceof Error ? error.message : String(error);
+        pendingAssistantEntry.message.classList.add("error");
+        renderMessageContent(pendingAssistantEntry, text);
+        setStatus("失败");
+      } finally {
+        isSending = false;
+        sendBtn.disabled = false;
+        pendingAssistantEntry = null;
+      }
+    }
+
+    sendBtn.addEventListener("click", () => {
+      handleSend().catch((error) => {
+        appendMessage("system", error instanceof Error ? error.message : String(error), "error");
+        setStatus("失败");
+        isSending = false;
+        sendBtn.disabled = false;
+        pendingAssistantEntry = null;
+      });
+    });
+
+    messageInput.addEventListener("input", () => {
+      resizeComposer();
+    });
+
+    messageInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        handleSend().catch((error) => {
+          appendMessage("system", error instanceof Error ? error.message : String(error), "error");
+          setStatus("失败");
+          isSending = false;
+          sendBtn.disabled = false;
+          pendingAssistantEntry = null;
+        });
+      }
+    });
+
+    resizeComposer();
+    messageInput.focus();
+  </script>
+</body>
+</html>

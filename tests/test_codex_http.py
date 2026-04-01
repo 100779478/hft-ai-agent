@@ -8,6 +8,9 @@ from unittest.mock import patch
 from app.codex_http import ChatRequest, CodexExecRunner, PROJECT_ROOT, playground
 
 
+SESSION_UUID = "019d4250-293e-7182-88e1-be2e7449b847"
+
+
 class FakeStream:
     def __init__(self, lines: list[str]) -> None:
         self._lines = list(lines)
@@ -43,16 +46,22 @@ class CodexHttpTests(unittest.TestCase):
         body = response.body.decode("utf-8")
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Codex HTTP Test Page", body)
-        self.assertIn("/chat", body)
-        self.assertIn("/health", body)
+        self.assertIn("HTML 对话工作台", body)
         self.assertIn("/chat/stream", body)
-        self.assertIn("Reset Context", body)
-        self.assertIn("continue_context", body)
-        self.assertIn("session_id", body)
+        self.assertIn("customerid", body)
+        self.assertIn("当前用户", body)
+        self.assertIn("renderMarkdown", body)
+        self.assertIn("createArtifactCard", body)
+        self.assertIn("renderArtifactCards", body)
+        self.assertIn("Ctrl/Cmd + 回车发送", body)
         self.assertIn(r'"D:\\hft-ai-agent"', body)
-        self.assertIn('buffer.indexOf("\\n")', body)
-        self.assertIn('JSON.stringify(event.data)}\\n`', body)
+
+    def test_requirement_intake_skill_should_accumulate_context_and_stop_reasking(self) -> None:
+        body = (PROJECT_ROOT / ".codex" / "skills" / "requirement_intake" / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("始终合并当前轮与之前轮次里已经确认的信息", body)
+        self.assertIn("只允许一次性列出当前全部缺失项", body)
+        self.assertIn("[INTAKE_COMPLETE]", body)
 
     def test_build_command_should_include_expected_flags(self) -> None:
         runner = CodexExecRunner(codex_command="codex", dotenv_path=None)
@@ -90,9 +99,9 @@ class CodexHttpTests(unittest.TestCase):
 
     def test_extract_session_id_should_parse_cli_output(self) -> None:
         runner = CodexExecRunner(codex_command="codex", dotenv_path=None)
-        session_id = runner._extract_session_id("", "session id: 019d4250-293e-7182-88e1-be2e7449b847")
+        session_id = runner._extract_session_id("", f"session id: {SESSION_UUID}")
 
-        self.assertEqual(session_id, "019d4250-293e-7182-88e1-be2e7449b847")
+        self.assertEqual(session_id, SESSION_UUID)
 
     def test_build_command_should_resume_last_context(self) -> None:
         runner = CodexExecRunner(codex_command="codex", dotenv_path=None)
@@ -110,8 +119,28 @@ class CodexHttpTests(unittest.TestCase):
         self.assertNotIn("--add-dir", command)
         self.assertEqual(command[-1], "Follow up")
 
+    def test_build_command_should_expand_multiline_message_into_line_blocks(self) -> None:
+        runner = CodexExecRunner(codex_command="codex", dotenv_path=None)
+        request = ChatRequest(message="line1\nline2\nline3", cwd="D:/hft-ai-agent")
+
+        command = runner._build_command(
+            payload=request,
+            cwd=Path("D:/hft-ai-agent"),
+            last_message_path=Path("D:/tmp/last.txt"),
+        )
+
+        self.assertIn("The user submitted a multi-line message.", command[-1])
+        self.assertIn("[Line 1] line1 [/Line 1]", command[-1])
+        self.assertIn("[Line 2] line2 [/Line 2]", command[-1])
+        self.assertIn("[Line 3] line3 [/Line 3]", command[-1])
+        self.assertNotIn("\nline2", command[-1])
+
     def test_run_chat_should_return_last_message(self) -> None:
-        runner = CodexExecRunner(codex_command="codex", default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"), dotenv_path=None)
+        runner = CodexExecRunner(
+            codex_command="codex",
+            default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"),
+            dotenv_path=None,
+        )
         request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent")
 
         def fake_run(command, cwd, env, capture_output, text, encoding, errors, timeout):
@@ -130,7 +159,11 @@ class CodexHttpTests(unittest.TestCase):
         self.assertIn("codex", response.command[0])
 
     def test_run_chat_should_fallback_to_stderr_when_stdout_missing(self) -> None:
-        runner = CodexExecRunner(codex_command="codex", default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"), dotenv_path=None)
+        runner = CodexExecRunner(
+            codex_command="codex",
+            default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"),
+            dotenv_path=None,
+        )
         request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent")
 
         def fake_run(command, cwd, env, capture_output, text, encoding, errors, timeout):
@@ -147,7 +180,11 @@ class CodexHttpTests(unittest.TestCase):
         self.assertEqual(response.stderr, "stderr fallback")
 
     def test_run_chat_should_handle_timeout(self) -> None:
-        runner = CodexExecRunner(codex_command="codex", default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"), dotenv_path=None)
+        runner = CodexExecRunner(
+            codex_command="codex",
+            default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"),
+            dotenv_path=None,
+        )
         request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent", timeout_seconds=5)
 
         with patch(
@@ -161,7 +198,11 @@ class CodexHttpTests(unittest.TestCase):
         self.assertIn("timed out", response.reply)
 
     def test_stream_chat_should_emit_progress_and_result(self) -> None:
-        runner = CodexExecRunner(codex_command="codex", default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"), dotenv_path=None)
+        runner = CodexExecRunner(
+            codex_command="codex",
+            default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"),
+            dotenv_path=None,
+        )
         request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent")
 
         with patch("app.codex_http.subprocess.Popen", new=FakePopen):
@@ -177,6 +218,44 @@ class CodexHttpTests(unittest.TestCase):
         self.assertIsNone(events[-1]["data"]["session_id"])
         self.assertTrue(events[-1]["data"]["ok"])
 
+    def test_run_chat_should_persist_customerid_alias_and_resume_with_real_session_id(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            codex_home = Path(temp_dir) / ".codex"
+            runner = CodexExecRunner(codex_command="codex", default_codex_home=codex_home, dotenv_path=None)
+            request = ChatRequest(
+                message="Build page",
+                cwd="D:/hft-ai-agent",
+                continue_context=True,
+                session_id="admin",
+            )
+            commands: list[list[str]] = []
+            replies = ["FIRST", "SECOND"]
+            results = [
+                subprocess.CompletedProcess(args=["codex"], returncode=0, stdout="", stderr=f"session id: {SESSION_UUID}"),
+                subprocess.CompletedProcess(args=["codex"], returncode=0, stdout="", stderr=""),
+            ]
+
+            def fake_run(command, cwd, env, capture_output, text, encoding, errors, timeout):
+                commands.append(command)
+                output_path = Path(command[command.index("--output-last-message") + 1])
+                output_path.write_text(replies[len(commands) - 1], encoding="utf-8")
+                return results[len(commands) - 1]
+
+            with patch("app.codex_http.subprocess.run", side_effect=fake_run):
+                first = runner.run_chat(request)
+                second = runner.run_chat(request)
+
+            alias_map = json.loads((codex_home / "session_aliases.json").read_text(encoding="utf-8"))
+            self.assertEqual(alias_map["admin"], SESSION_UUID)
+            self.assertEqual(first.resume_mode, "new")
+            self.assertEqual(first.session_id, SESSION_UUID)
+            self.assertEqual(first.reply, "FIRST")
+            self.assertEqual(commands[0][:2], ["codex", "exec"])
+            self.assertNotIn("resume", commands[0])
+            self.assertEqual(second.resume_mode, "session_id")
+            self.assertEqual(second.reply, "SECOND")
+            self.assertEqual(commands[1][:3], ["codex", "exec", "resume"])
+            self.assertIn(SESSION_UUID, commands[1])
 
     def test_build_command_should_use_dotenv_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -245,3 +324,4 @@ class CodexHttpTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

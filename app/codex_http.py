@@ -22,438 +22,13 @@ DEFAULT_CODEX_HOME: Optional[Path] = PROJECT_ROOT / ".codex"
 DEFAULT_CWD = PROJECT_ROOT
 DEFAULT_PORT = 8010
 DEFAULT_DOTENV_PATH = PROJECT_ROOT / ".env"
-
-TEST_PAGE_HTML = """<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Codex HTTP Service</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #0b1220;
-      --panel: #111827;
-      --panel-2: #0f172a;
-      --line: #243041;
-      --text: #e5edf7;
-      --muted: #8fa1b8;
-      --accent: #22c55e;
-      --accent-2: #38bdf8;
-      --danger: #ef4444;
-      --warn: #f59e0b;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-    .wrap {
-      max-width: 1320px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .title h1 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 600;
-    }
-    .title span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 420px 1fr;
-      gap: 16px;
-    }
-    .panel {
-      background: linear-gradient(180deg, var(--panel), var(--panel-2));
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
-    }
-    .panel h2 {
-      margin: 0 0 12px;
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .field {
-      margin-bottom: 10px;
-    }
-    label {
-      display: block;
-      margin-bottom: 6px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px 12px;
-      color: var(--text);
-      background: #0a0f1c;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      outline: none;
-      font: inherit;
-    }
-    textarea {
-      min-height: 110px;
-      resize: vertical;
-    }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 12px;
-    }
-    button {
-      padding: 10px 14px;
-      border: 0;
-      border-radius: 8px;
-      cursor: pointer;
-      color: #04110a;
-      background: var(--accent);
-      font-weight: 600;
-    }
-    button.secondary {
-      color: #03111a;
-      background: var(--accent-2);
-    }
-    button.warn {
-      color: #1a1203;
-      background: var(--warn);
-    }
-    .meta {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .chip {
-      padding: 10px 12px;
-      background: #0a0f1c;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .chip b {
-      color: var(--text);
-    }
-    .output-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    pre {
-      margin: 0;
-      padding: 12px;
-      min-height: 420px;
-      overflow: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      background: #08101d;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      color: #d7e3f4;
-      font-size: 12px;
-      line-height: 1.5;
-    }
-    .stream {
-      min-height: 420px;
-    }
-    .status-ok { color: var(--accent); }
-    .status-fail { color: var(--danger); }
-    @media (max-width: 980px) {
-      .grid, .output-grid { grid-template-columns: 1fr; }
-      .meta, .row { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="title">
-      <div>
-        <h1>Codex HTTP Test Page</h1>
-        <span>Real HTTP calls to the local service, then the service runs codex exec.</span>
-      </div>
-      <span id="statusText">Idle</span>
-    </div>
-    <div class="grid">
-      <section class="panel">
-        <h2>Request</h2>
-        <div class="field">
-          <label for="message">message</label>
-          <textarea id="message">Reply with exactly OK.</textarea>
-        </div>
-        <div class="field">
-          <label for="cwd">cwd</label>
-          <input id="cwd" value="" />
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="model">model</label>
-            <input id="model" value="" placeholder="for example gpt-5.4" />
-          </div>
-          <div class="field">
-            <label for="timeout">timeout_seconds</label>
-            <input id="timeout" type="number" min="5" max="3600" value="300" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="continueContext">context</label>
-            <input id="continueContext" type="checkbox" checked />
-          </div>
-          <div class="field">
-            <label for="contextState">context_state</label>
-            <input id="contextState" value="new session on next request" readonly />
-          </div>
-        </div>
-        <div class="actions">
-          <button type="button" id="healthBtn" class="secondary">GET /health</button>
-          <button type="button" id="chatBtn">POST /chat</button>
-          <button type="button" id="streamBtn" class="warn">POST /chat/stream</button>
-          <button type="button" id="resetContextBtn" class="secondary">Reset Context</button>
-        </div>
-      </section>
-      <section class="panel">
-        <h2>Result</h2>
-        <div class="meta">
-          <div class="chip">Endpoint: <b id="calledApi">-</b></div>
-          <div class="chip">Status: <b id="calledStatus">-</b></div>
-          <div class="chip">HTTP: <b id="httpStatus">-</b></div>
-          <div class="chip">Duration: <b id="calledDuration">-</b></div>
-        </div>
-        <div class="output-grid">
-          <div>
-            <label>Final Response</label>
-            <pre id="output">Click a button to show the request payload and response body.</pre>
-          </div>
-          <div>
-            <label>Stream Log</label>
-            <pre id="streamOutput" class="stream">Streaming calls will show stdout and stderr here.</pre>
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>
-  <script>
-    const cwdInput = document.getElementById("cwd");
-    const messageInput = document.getElementById("message");
-    const modelInput = document.getElementById("model");
-    const timeoutInput = document.getElementById("timeout");
-    const output = document.getElementById("output");
-    const streamOutput = document.getElementById("streamOutput");
-    const statusText = document.getElementById("statusText");
-    const calledApi = document.getElementById("calledApi");
-    const calledStatus = document.getElementById("calledStatus");
-    const calledDuration = document.getElementById("calledDuration");
-    const httpStatus = document.getElementById("httpStatus");
-    const continueContextInput = document.getElementById("continueContext");
-    const contextStateInput = document.getElementById("contextState");
-    let hasContext = false;
-    let currentSessionId = null;
-
-    cwdInput.value = window.location.origin.includes("127.0.0.1") ? "D:\\\\hft-ai-agent" : "";
-
-    function syncContextState() {
-      if (!continueContextInput.checked) {
-        contextStateInput.value = "context disabled";
-      } else if (currentSessionId) {
-        contextStateInput.value = `resume session ${currentSessionId}`;
-      } else if (hasContext) {
-        contextStateInput.value = "resume last session";
-      } else {
-        contextStateInput.value = "new session on next request";
-      }
-    }
-
-    function setMeta(endpoint, rawStatus, startedAt, ok) {
-      calledApi.textContent = endpoint;
-      calledDuration.textContent = `${Date.now() - startedAt} ms`;
-      httpStatus.textContent = String(rawStatus);
-      calledStatus.textContent = ok ? "success" : "failed";
-      calledStatus.className = ok ? "status-ok" : "status-fail";
-      statusText.textContent = ok ? "Done" : "Failed";
-    }
-
-    function buildPayload() {
-      return {
-        message: messageInput.value,
-        cwd: cwdInput.value || null,
-        model: modelInput.value || null,
-        timeout_seconds: Number(timeoutInput.value || 300),
-        continue_context: continueContextInput.checked && hasContext,
-        session_id: continueContextInput.checked ? currentSessionId : null
-      };
-    }
-
-    function render(endpoint, response, startedAt, requestBody, rawStatus) {
-      const ok = rawStatus >= 200 && rawStatus < 300 && (!response || response.ok !== false);
-      setMeta(endpoint, rawStatus, startedAt, ok);
-      output.textContent = JSON.stringify({ endpoint, request: requestBody, response }, null, 2);
-    }
-
-    function resetStream() {
-      streamOutput.textContent = "";
-    }
-
-    function appendStream(line) {
-      streamOutput.textContent += line;
-      streamOutput.scrollTop = streamOutput.scrollHeight;
-    }
-
-    function updateContextFromResponse(response) {
-      if (response && response.session_id) {
-        currentSessionId = response.session_id;
-        hasContext = true;
-      } else if (response && response.ok !== false) {
-        hasContext = true;
-      }
-      syncContextState();
-    }
-
-    function resetContext() {
-      hasContext = false;
-      currentSessionId = null;
-      syncContextState();
-      statusText.textContent = "Context reset";
-    }
-
-    async function callHealth() {
-      const startedAt = Date.now();
-      resetStream();
-      statusText.textContent = "Calling /health...";
-      const resp = await fetch("/health");
-      const data = await resp.json();
-      render("/health", data, startedAt, null, resp.status);
-    }
-
-    async function callChat() {
-      const startedAt = Date.now();
-      const payload = buildPayload();
-      resetStream();
-      statusText.textContent = "Calling /chat...";
-      const resp = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await resp.json();
-      updateContextFromResponse(data);
-      render("/chat", data, startedAt, payload, resp.status);
-    }
-
-    async function callChatStream() {
-      const startedAt = Date.now();
-      const payload = buildPayload();
-      resetStream();
-      output.textContent = JSON.stringify({ endpoint: "/chat/stream", request: payload }, null, 2);
-      statusText.textContent = "Calling /chat/stream...";
-      calledApi.textContent = "/chat/stream";
-      const resp = await fetch("/chat/stream", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      httpStatus.textContent = String(resp.status);
-
-      if (!resp.body) {
-        throw new Error("The browser did not return a readable stream.");
-      }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let finalResult = null;
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-          break;
-        }
-        buffer += decoder.decode(value, { stream: true });
-        while (true) {
-          const index = buffer.indexOf("\\n");
-          if (index === -1) {
-            break;
-          }
-          const line = buffer.slice(0, index).trim();
-          buffer = buffer.slice(index + 1);
-          if (!line) {
-            continue;
-          }
-          const event = JSON.parse(line);
-          if (event.type === "stdout") {
-            appendStream(`[stdout] ${event.data}`);
-          } else if (event.type === "stderr") {
-            appendStream(`[stderr] ${event.data}`);
-          } else if (event.type === "start") {
-            appendStream(`[start] ${JSON.stringify(event.data)}\\n`);
-          } else if (event.type === "result") {
-            finalResult = event.data;
-          }
-        }
-      }
-
-      if (finalResult) {
-        updateContextFromResponse(finalResult);
-        render("/chat/stream", finalResult, startedAt, payload, resp.status);
-      } else {
-        setMeta("/chat/stream", resp.status, startedAt, false);
-      }
-    }
-
-    continueContextInput.addEventListener("change", () => {
-      syncContextState();
-    });
-
-    document.getElementById("healthBtn").addEventListener("click", () => {
-      callHealth().catch((error) => {
-        statusText.textContent = "Failed";
-        output.textContent = String(error);
-      });
-    });
-
-    document.getElementById("chatBtn").addEventListener("click", () => {
-      callChat().catch((error) => {
-        statusText.textContent = "Failed";
-        output.textContent = String(error);
-      });
-    });
-
-    document.getElementById("streamBtn").addEventListener("click", () => {
-      callChatStream().catch((error) => {
-        statusText.textContent = "Failed";
-        output.textContent = String(error);
-      });
-    });
-    document.getElementById("resetContextBtn").addEventListener("click", () => {
-      resetContext();
-    });
-
-    syncContextState();
-  </script>
-</body>
-</html>
-"""
+PLAYGROUND_HTML_PATH = PROJECT_ROOT / "app" / "chat_playground.html"
+SESSION_ID_OUTPUT_PATTERN = re.compile(
+    r"session id:\s*([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
+)
+SESSION_ID_VALUE_PATTERN = re.compile(
+    r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+)
 
 
 class ChatRequest(BaseModel):
@@ -471,7 +46,10 @@ class ChatRequest(BaseModel):
         default=False,
         description="Resume the most recent recorded Codex session for this project",
     )
-    session_id: Optional[str] = Field(default=None, description="Resume a specific Codex session id")
+    session_id: Optional[str] = Field(
+        default=None,
+        description="Resume a specific Codex session id, or pass a stable alias such as customerid",
+    )
     ephemeral: bool = Field(default=False, description="Do not persist session files")
     add_dirs: list[str] = Field(default_factory=list, description="Additional writable directories")
     timeout_seconds: int = Field(default=300, ge=5, le=3600)
@@ -565,11 +143,17 @@ class CodexExecRunner:
     def run_chat(self, payload: ChatRequest) -> ChatResponse:
         cwd = Path(payload.cwd).resolve() if payload.cwd else self.default_cwd.resolve()
         codex_home = self._resolve_codex_home(payload.codex_home)
+        resume_mode, resolved_session_id, session_alias = self._resolve_resume_target(payload, codex_home)
 
         with self._temporary_directory(codex_home) as temp_dir:
             last_message_path = Path(temp_dir) / "last_message.txt"
-            resume_mode = self._resolve_resume_mode(payload)
-            command = self._build_command(payload=payload, cwd=cwd, last_message_path=last_message_path)
+            command = self._build_command(
+                payload=payload,
+                cwd=cwd,
+                last_message_path=last_message_path,
+                resume_mode=resume_mode,
+                resolved_session_id=resolved_session_id,
+            )
             env = self._build_env(codex_home)
             started_at = time.perf_counter()
             try:
@@ -589,6 +173,8 @@ class CodexExecRunner:
                     reply = self._combine_output(completed.stdout, completed.stderr).strip()
                 stdout_text = self._safe_output(completed.stdout)
                 stderr_text = self._safe_output(completed.stderr)
+                actual_session_id = self._extract_session_id(stdout_text, stderr_text)
+                self._store_session_alias(codex_home, session_alias, actual_session_id)
                 return self._build_chat_response(
                     cwd=cwd,
                     codex_home=codex_home,
@@ -597,7 +183,7 @@ class CodexExecRunner:
                     exit_code=completed.returncode,
                     duration_ms=duration_ms,
                     resume_mode=resume_mode,
-                    session_id=self._extract_session_id(stdout_text, stderr_text),
+                    session_id=actual_session_id,
                     stdout=stdout_text,
                     stderr=stderr_text,
                 )
@@ -605,6 +191,8 @@ class CodexExecRunner:
                 duration_ms = int((time.perf_counter() - started_at) * 1000)
                 stdout_text = self._safe_output(exc.stdout)
                 stderr_text = self._safe_output(exc.stderr)
+                actual_session_id = self._extract_session_id(stdout_text, stderr_text)
+                self._store_session_alias(codex_home, session_alias, actual_session_id)
                 return self._build_chat_response(
                     cwd=cwd,
                     codex_home=codex_home,
@@ -613,7 +201,7 @@ class CodexExecRunner:
                     exit_code=-1,
                     duration_ms=duration_ms,
                     resume_mode=resume_mode,
-                    session_id=self._extract_session_id(stdout_text, stderr_text),
+                    session_id=actual_session_id,
                     stdout=stdout_text,
                     stderr=stderr_text,
                 )
@@ -621,11 +209,17 @@ class CodexExecRunner:
     def stream_chat(self, payload: ChatRequest) -> Iterator[str]:
         cwd = Path(payload.cwd).resolve() if payload.cwd else self.default_cwd.resolve()
         codex_home = self._resolve_codex_home(payload.codex_home)
+        resume_mode, resolved_session_id, session_alias = self._resolve_resume_target(payload, codex_home)
 
         with self._temporary_directory(codex_home) as temp_dir:
             last_message_path = Path(temp_dir) / "last_message.txt"
-            resume_mode = self._resolve_resume_mode(payload)
-            command = self._build_command(payload=payload, cwd=cwd, last_message_path=last_message_path)
+            command = self._build_command(
+                payload=payload,
+                cwd=cwd,
+                last_message_path=last_message_path,
+                resume_mode=resume_mode,
+                resolved_session_id=resolved_session_id,
+            )
             env = self._build_env(codex_home)
             started_at = time.perf_counter()
             yield self._json_line(
@@ -687,6 +281,8 @@ class CodexExecRunner:
                     duration_ms = int((time.perf_counter() - started_at) * 1000)
                     stdout_text = "".join(stdout_chunks)
                     stderr_text = "".join(stderr_chunks)
+                    actual_session_id = self._extract_session_id(stdout_text, stderr_text)
+                    self._store_session_alias(codex_home, session_alias, actual_session_id)
                     response = self._build_chat_response(
                         cwd=cwd,
                         codex_home=codex_home,
@@ -695,7 +291,7 @@ class CodexExecRunner:
                         exit_code=-1,
                         duration_ms=duration_ms,
                         resume_mode=resume_mode,
-                        session_id=self._extract_session_id(stdout_text, stderr_text),
+                        session_id=actual_session_id,
                         stdout=stdout_text,
                         stderr=stderr_text,
                     )
@@ -724,6 +320,8 @@ class CodexExecRunner:
                 reply = ("".join(stdout_chunks) or "".join(stderr_chunks)).strip()
             stdout_text = "".join(stdout_chunks)
             stderr_text = "".join(stderr_chunks)
+            actual_session_id = self._extract_session_id(stdout_text, stderr_text)
+            self._store_session_alias(codex_home, session_alias, actual_session_id)
             response = self._build_chat_response(
                 cwd=cwd,
                 codex_home=codex_home,
@@ -732,17 +330,25 @@ class CodexExecRunner:
                 exit_code=exit_code,
                 duration_ms=duration_ms,
                 resume_mode=resume_mode,
-                session_id=self._extract_session_id(stdout_text, stderr_text),
+                session_id=actual_session_id,
                 stdout=stdout_text,
                 stderr=stderr_text,
             )
             yield self._json_line({"type": "result", "data": self._chat_response_to_dict(response)})
 
-    def _build_command(self, *, payload: ChatRequest, cwd: Path, last_message_path: Path) -> list[str]:
-        resume_mode = self._resolve_resume_mode(payload)
+    def _build_command(
+        self,
+        *,
+        payload: ChatRequest,
+        cwd: Path,
+        last_message_path: Path,
+        resume_mode: Optional[str] = None,
+        resolved_session_id: Optional[str] = None,
+    ) -> list[str]:
+        effective_resume_mode = resume_mode or self._resolve_resume_mode(payload)
         effective_model = self._effective_model(payload.model)
         effective_openai_base_url = self._effective_openai_base_url()
-        if resume_mode == "new":
+        if effective_resume_mode == "new":
             command = [self.codex_command, "exec", "--output-last-message", str(last_message_path)]
             if effective_openai_base_url:
                 command.extend(["-c", self._config_string_value("openai_base_url", effective_openai_base_url)])
@@ -761,7 +367,7 @@ class CodexExecRunner:
             command.extend(["-C", str(cwd)])
             for directory in payload.add_dirs:
                 command.extend(["--add-dir", str(Path(directory).resolve())])
-            command.append(payload.message)
+            command.append(self._prepare_prompt_message(payload.message))
             return command
 
         command = [self.codex_command, "exec", "resume", "--output-last-message", str(last_message_path)]
@@ -777,12 +383,34 @@ class CodexExecRunner:
             command.append("--dangerously-bypass-approvals-and-sandbox")
         elif payload.full_auto:
             command.append("--full-auto")
-        if resume_mode == "session_id":
-            command.append(str(payload.session_id))
+        if effective_resume_mode == "session_id":
+            target_session_id = resolved_session_id or payload.session_id
+            if not target_session_id:
+                raise ValueError("resume command requires a resolved session id")
+            command.append(str(target_session_id))
         else:
             command.append("--last")
-        command.append(payload.message)
+        command.append(self._prepare_prompt_message(payload.message))
         return command
+
+    def _prepare_prompt_message(self, message: str) -> str:
+        normalized = message.replace("\r\n", "\n").replace("\r", "\n")
+        if "\n" not in normalized:
+            return message
+
+        lines = normalized.split("\n")
+        rendered_lines: list[str] = []
+        for index, line in enumerate(lines, start=1):
+            content = line if line else "<EMPTY LINE>"
+            rendered_lines.append(f"[Line {index}] {content} [/Line {index}]")
+
+        return (
+            "The user submitted a multi-line message. Each [Line N] block below is one original line from the same "
+            "message. Do not ignore later lines. If there are multiple questions or requirements, answer all of them "
+            "in order. "
+            + " ".join(rendered_lines)
+        )
+
     def _build_chat_response(
         self,
         *,
@@ -830,16 +458,34 @@ class CodexExecRunner:
             "stderr": response.stderr,
         }
 
-    def _resolve_resume_mode(self, payload: ChatRequest) -> str:
-        if payload.session_id:
-            return "session_id"
+    def _resolve_resume_target(
+        self,
+        payload: ChatRequest,
+        codex_home: Optional[Path],
+    ) -> tuple[str, Optional[str], Optional[str]]:
+        requested_session = (payload.session_id or "").strip()
+        if requested_session:
+            if self._is_session_uuid(requested_session):
+                return "session_id", requested_session, None
+            alias = self._normalize_session_alias(requested_session)
+            resolved_session_id = self._load_session_aliases(codex_home).get(alias) if alias else None
+            if resolved_session_id:
+                return "session_id", resolved_session_id, alias
+            return "new", None, alias
         if payload.continue_context:
+            return "last", None, None
+        return "new", None, None
+
+    def _resolve_resume_mode(self, payload: ChatRequest) -> str:
+        if payload.session_id and self._is_session_uuid(payload.session_id):
+            return "session_id"
+        if payload.continue_context and not payload.session_id:
             return "last"
         return "new"
 
     def _extract_session_id(self, stdout: str, stderr: str) -> Optional[str]:
         combined = f"{stdout}\n{stderr}"
-        match = re.search(r"session id:\s*([0-9a-fA-F-]{36})", combined)
+        match = SESSION_ID_OUTPUT_PATTERN.search(combined)
         if match:
             return match.group(1)
         return None
@@ -982,14 +628,68 @@ class CodexExecRunner:
     def _json_line(self, payload: dict[str, object]) -> str:
         return json.dumps(payload, ensure_ascii=False) + "\n"
 
+    def _is_session_uuid(self, value: Optional[str]) -> bool:
+        return bool(value and SESSION_ID_VALUE_PATTERN.fullmatch(value.strip()))
+
+    def _normalize_session_alias(self, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        alias = value.strip()
+        if not alias or self._is_session_uuid(alias):
+            return None
+        return alias
+
+    def _session_aliases_path(self, codex_home: Optional[Path]) -> Optional[Path]:
+        if codex_home is None:
+            return None
+        return codex_home / "session_aliases.json"
+
+    def _load_session_aliases(self, codex_home: Optional[Path]) -> dict[str, str]:
+        path = self._session_aliases_path(codex_home)
+        if path is None or not path.exists():
+            return {}
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        if not isinstance(data, dict):
+            return {}
+        aliases: dict[str, str] = {}
+        for key, value in data.items():
+            if isinstance(key, str) and isinstance(value, str) and self._is_session_uuid(value):
+                aliases[key] = value
+        return aliases
+
+    def _store_session_alias(
+        self,
+        codex_home: Optional[Path],
+        alias: Optional[str],
+        session_id: Optional[str],
+    ) -> None:
+        normalized_alias = self._normalize_session_alias(alias)
+        if codex_home is None or normalized_alias is None or not self._is_session_uuid(session_id):
+            return
+        path = self._session_aliases_path(codex_home)
+        if path is None:
+            return
+        aliases = self._load_session_aliases(codex_home)
+        aliases[normalized_alias] = str(session_id)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(aliases, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+
 
 runner = CodexExecRunner()
 app = FastAPI(title="Codex HTTP Service")
 
 
+def load_playground_html() -> str:
+    content = PLAYGROUND_HTML_PATH.read_text(encoding="utf-8")
+    return content.replace("__DEFAULT_CWD__", json.dumps(str(DEFAULT_CWD)))
+
+
 @app.get("/", response_class=HTMLResponse)
 def playground() -> HTMLResponse:
-    return HTMLResponse(TEST_PAGE_HTML)
+    return HTMLResponse(load_playground_html())
 
 
 @app.get("/health", response_model=HealthResponse)
