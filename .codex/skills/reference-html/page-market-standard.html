@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 行情主页面</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">标准行情页</div>
+      </div>
+      <div class="titlebar__right">
+        <span class="pill">适用: 综合最优行情 / 单券深度 / 逐笔成交</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <input class="input" style="width: 190px;" value="240215 / 24附息国债15">
+        <select class="select" style="width: 120px;"><option>T+1</option></select>
+        <select class="select" style="width: 120px;"><option>XBond / CFETS</option></select>
+        <button class="button button--primary">订阅</button>
+        <button class="button">打开手工单</button>
+      </div>
+      <div class="toolbar__group">
+        <span class="status-pill status-pill--online"><span class="status-dot"></span>行情正常</span>
+      </div>
+    </div>
+
+    <div class="split-layout split-layout--3" style="flex: 1;">
+      <section class="stack">
+        <div class="panel" style="flex: 1;">
+          <div class="panel__header">
+            <div class="panel__title">综合最优行情</div>
+          </div>
+          <div class="panel__body" style="padding: 0;">
+            <table class="dense-table">
+              <thead>
+                <tr>
+                  <th style="width: 88px;">债券代码</th>
+                  <th>债券简称</th>
+                  <th style="width: 80px;">Bid YTM</th>
+                  <th style="width: 80px;">Ofr YTM</th>
+                  <th style="width: 72px;">Bid 量</th>
+                  <th style="width: 72px;">Ofr 量</th>
+                  <th style="width: 88px;">来源</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="is-selected"><td>240215</td><td>24附息国债15</td><td class="text-up">1.8950</td><td class="text-down">1.9020</td><td>2000</td><td>3000</td><td>CFETS</td></tr>
+                <tr><td>240013</td><td>24国开13</td><td class="text-up">2.1130</td><td class="text-down">2.1210</td><td>1500</td><td>2600</td><td>XBond</td></tr>
+                <tr><td>230023</td><td>23进出23</td><td class="text-up">2.2425</td><td class="text-down">2.2515</td><td>800</td><td>1200</td><td>CFETS</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">深度梯队</div>
+          </div>
+          <div class="panel__body">
+            <table class="price-ladder">
+              <thead>
+                <tr><th>Bid量</th><th>Bid收益率</th><th>Ofr收益率</th><th>Ofr量</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="bid">2000</td><td class="bid text-up">1.8950</td><td class="ask text-down">1.9020</td><td class="ask">3000</td></tr>
+                <tr><td class="bid">1600</td><td class="bid text-up">1.8945</td><td class="ask text-down">1.9025</td><td class="ask">2200</td></tr>
+                <tr><td class="bid">1400</td><td class="bid text-up">1.8940</td><td class="ask text-down">1.9030</td><td class="ask">2100</td></tr>
+                <tr><td class="bid">1200</td><td class="bid text-up">1.8935</td><td class="ask text-down">1.9035</td><td class="ask">1600</td></tr>
+                <tr><td class="bid">1000</td><td class="bid text-up">1.8930</td><td class="ask text-down">1.9040</td><td class="ask">1200</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" style="flex: 1;">
+          <div class="panel__header">
+            <div class="panel__title">逐笔成交</div>
+          </div>
+          <div class="panel__body" style="padding: 0;">
+            <table class="dense-table">
+              <thead>
+                <tr><th style="width: 80px;">时间</th><th style="width: 80px;">方向</th><th style="width: 80px;">收益率</th><th style="width: 72px;">数量</th><th>成交方</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>14:25:08</td><td class="text-up">Bid</td><td class="text-up">1.8950</td><td>500</td><td>机构A</td></tr>
+                <tr><td>14:24:55</td><td class="text-down">Ofr</td><td class="text-down">1.9020</td><td>800</td><td>机构B</td></tr>
+                <tr><td>14:24:11</td><td class="text-up">Bid</td><td class="text-up">1.8945</td><td>300</td><td>机构C</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">快速交易承接</div>
+          </div>
+          <div class="panel__body">
+            <div class="field">
+              <label class="field__label">交易方向</label>
+              <div class="toolbar__group">
+                <button class="button button--danger" style="flex: 1;">Bid</button>
+                <button class="button button--success" style="flex: 1;">Ofr</button>
+              </div>
+            </div>
+            <div class="subtle-divider"></div>
+            <div class="two-column-form">
+              <div class="field"><label class="field__label">债券代码</label><input class="input" value="240215"></div>
+              <div class="field"><label class="field__label">结算方式</label><select class="select"><option>T+1</option></select></div>
+              <div class="field"><label class="field__label">收益率</label><input class="input" value="1.8950"></div>
+              <div class="field"><label class="field__label">数量</label><input class="input" value="1000"></div>
+            </div>
+            <div class="form-actions-inline" style="margin-top: 14px;">
+              <button class="button">打开完整下单页</button>
+              <button class="button button--primary">提交</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">行情页约束</div>
+          </div>
+          <div class="panel__body">
+            <ul class="bullet-list">
+              <li>行情页必须允许快速跳转到交易，而不是纯展示。</li>
+              <li>Bid / Ofr 颜色语义固定，不要任意换色。</li>
+              <li>综合行情、深度和逐笔最好同屏或近距离出现。</li>
+              <li>不要把快速下单做成居中的大表单。</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

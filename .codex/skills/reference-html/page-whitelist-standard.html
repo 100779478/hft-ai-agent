@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 白名单维护</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">标准白名单页</div>
+      </div>
+      <div class="titlebar__right">
+        <span class="pill">适用: CFETS / FIX 白名单维护</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <input class="input" style="width: 190px;" value="债券代码 / 债券简称">
+        <select class="select" style="width: 120px;"><option>白名单组</option></select>
+        <select class="select" style="width: 120px;"><option>状态</option></select>
+        <button class="button button--ghost">筛选</button>
+      </div>
+      <div class="toolbar__group">
+        <button class="button button--primary">新增</button>
+        <button class="button">导入</button>
+        <button class="button">导出</button>
+        <button class="button">设置</button>
+        <button class="button button--danger">删除</button>
+      </div>
+    </div>
+
+    <div class="split-layout split-layout--2" style="flex:1;">
+      <section class="stack">
+        <div class="panel" style="flex:1;">
+          <div class="panel__header">
+            <div class="panel__title">白名单主表</div>
+            <div class="toolbar__group">
+              <span class="status-pill status-pill--online"><span class="status-dot"></span>当前组: 双边核心券</span>
+            </div>
+          </div>
+          <div class="panel__body" style="padding:0;">
+            <table class="dense-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th style="width:88px;">债券代码</th>
+                  <th>债券简称</th>
+                  <th style="width:88px;">白名单组</th>
+                  <th style="width:88px;">市场</th>
+                  <th style="width:96px;">允许范围</th>
+                  <th style="width:84px;">状态</th>
+                  <th style="width:96px;">更新人</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="is-selected">
+                  <td>1</td><td>240215</td><td>24附息国债15</td><td>核心券</td><td>CFETS</td><td>双向报价</td><td><span class="tag tag--running">启用</span></td><td>trader001</td>
+                </tr>
+                <tr>
+                  <td>2</td><td>240013</td><td>24国开13</td><td>观察组</td><td>CFETS</td><td>仅买入</td><td><span class="tag tag--warn">待复核</span></td><td>risk002</td>
+                </tr>
+                <tr>
+                  <td>3</td><td>230023</td><td>23进出23</td><td>信用池</td><td>FIX</td><td>仅策略</td><td><span class="tag tag--stopped">停用</span></td><td>ops003</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">选中项设置</div>
+          </div>
+          <div class="panel__body">
+            <div class="two-column-form">
+              <div class="field"><label class="field__label">债券代码</label><input class="input" value="240215"></div>
+              <div class="field"><label class="field__label">白名单组</label><select class="select"><option>核心券</option></select></div>
+              <div class="field"><label class="field__label">交易范围</label><select class="select"><option>双向报价</option></select></div>
+              <div class="field"><label class="field__label">状态</label><select class="select"><option>启用</option></select></div>
+            </div>
+            <div class="subtle-divider"></div>
+            <div class="field">
+              <label class="field__label">备注</label>
+              <textarea class="text-area">该债券为高频核心做市标的，允许进入双边策略组。</textarea>
+            </div>
+            <div class="form-actions-inline" style="margin-top:14px;">
+              <button class="button">取消</button>
+              <button class="button button--primary">保存</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">页面约束</div>
+          </div>
+          <div class="panel__body">
+            <ul class="bullet-list">
+              <li>白名单页是“配置型列表页”，不能做成纯表单页。</li>
+              <li>列表、筛选、设置、导入导出必须同一个工作区内完成。</li>
+              <li>状态必须清晰区分启用、待复核、停用。</li>
+              <li>白名单设置建议用右侧摘要或子弹窗，不建议跳转新页面。</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

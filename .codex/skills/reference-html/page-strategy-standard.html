@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 策略监控页</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">标准策略页</div>
+      </div>
+      <div class="titlebar__right">
+        <span class="pill">适用: 策略组管理 / 实例监控 / 参数页</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <select class="select" style="width: 160px;"><option>策略组: 国债做市A</option></select>
+        <select class="select" style="width: 140px;"><option>标签: 全部实例</option></select>
+        <button class="button button--ghost">关联查看</button>
+      </div>
+      <div class="toolbar__group">
+        <button class="button button--success">启动</button>
+        <button class="button button--warn">暂停</button>
+        <button class="button button--danger">停止</button>
+        <button class="button">新增</button>
+        <button class="button">复制</button>
+        <button class="button">导入</button>
+        <button class="button">导出</button>
+      </div>
+    </div>
+
+    <div class="split-layout split-layout--2" style="flex: 1;">
+      <section class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">策略组概览</div>
+          </div>
+          <div class="panel__body">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-card__label">实例总数</div>
+                <div class="stat-card__value">18</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card__label">运行中</div>
+                <div class="stat-card__value text-down">11</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card__label">待处理告警</div>
+                <div class="stat-card__value text-neutral">3</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card__label">自动停止</div>
+                <div class="stat-card__value text-up">1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="flex: 1;">
+          <div class="panel__header">
+            <div class="panel__title">实例监控主表</div>
+          </div>
+          <div class="panel__body" style="padding: 0;">
+            <table class="dense-table">
+              <thead>
+                <tr>
+                  <th style="width: 46px;">#</th>
+                  <th style="width: 124px;">实例名</th>
+                  <th style="width: 92px;">模板</th>
+                  <th style="width: 84px;">状态</th>
+                  <th style="width: 72px;">持仓</th>
+                  <th style="width: 72px;">成交</th>
+                  <th style="width: 72px;">PnL</th>
+                  <th style="width: 88px;">更新时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="is-selected"><td>1</td><td>G2-07</td><td>MM_10Y</td><td><span class="tag tag--running">运行中</span></td><td>1200</td><td>600</td><td class="text-down">+12.6</td><td>14:25:10</td></tr>
+                <tr><td>2</td><td>G2-08</td><td>MM_10Y</td><td><span class="tag tag--warn">待复核</span></td><td>900</td><td>300</td><td class="text-neutral">+1.4</td><td>14:25:04</td></tr>
+                <tr><td>3</td><td>IRS-02</td><td>Spread_A</td><td><span class="tag tag--stopped">已停止</span></td><td>0</td><td>0</td><td class="text-up">-3.1</td><td>14:24:48</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">当前实例摘要</div>
+          </div>
+          <div class="panel__body">
+            <div class="metric-row"><span>实例</span><strong>G2-07</strong><span class="tag tag--running">运行中</span></div>
+            <div class="metric-row"><span>策略组</span><strong>国债做市A</strong><span>模板 MM_10Y</span></div>
+            <div class="metric-row"><span>委托完成度</span><div class="bar"><span style="width: 64%;"></span></div><span>64%</span></div>
+            <div class="metric-row"><span>风控状态</span><strong>正常</strong><span class="status-pill status-pill--online"><span class="status-dot"></span>联动开启</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">常用动作</div>
+          </div>
+          <div class="panel__body quick-actions">
+            <div class="quick-card">
+              <div class="quick-card__title">参数设置</div>
+              <div class="quick-card__meta">实例参数应作为邻接页面打开，而不是跳到新应用风格。</div>
+            </div>
+            <div class="quick-card">
+              <div class="quick-card__title">策略日志</div>
+              <div class="quick-card__meta">建议复用表格或日志列表，不要做时间轴型页面。</div>
+            </div>
+            <div class="quick-card">
+              <div class="quick-card__title">批量启停</div>
+              <div class="quick-card__meta">按钮优先常驻在工具条，避免隐藏进更多菜单。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">页面约束</div>
+          </div>
+          <div class="panel__body">
+            <ul class="bullet-list">
+              <li>策略页必须突出状态和批量操作，不能只做配置表单。</li>
+              <li>运行中、暂停、停止、风险拦截四类状态必须一眼可区分。</li>
+              <li>策略组、实例、参数、日志之间宜采用邻接工作区切换。</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 操作与审批页</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">标准操作页</div>
+      </div>
+      <div class="titlebar__right">
+        <span class="pill">适用: 期货审批 / 白名单 / 手工录入</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <button class="button button--primary">新增</button>
+        <button class="button">导入</button>
+        <button class="button">导出</button>
+        <button class="button button--danger">删除</button>
+      </div>
+      <div class="toolbar__group">
+        <input class="input" style="width: 190px;" value="债券代码 / 审批单号">
+        <button class="button button--ghost">查询</button>
+      </div>
+    </div>
+
+    <div class="split-layout split-layout--2" style="flex: 1;">
+      <section class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">录入区</div>
+          </div>
+          <div class="panel__body">
+            <div class="three-column-form">
+              <div class="field"><label class="field__label">审批单号</label><input class="input" value="FT-20260325-018"></div>
+              <div class="field"><label class="field__label">债券代码</label><input class="input" value="240215"></div>
+              <div class="field"><label class="field__label">债券简称</label><input class="input" value="24附息国债15"></div>
+              <div class="field"><label class="field__label">交易方向</label><select class="select"><option>买入</option></select></div>
+              <div class="field"><label class="field__label">收益率</label><input class="input" value="1.8950"></div>
+              <div class="field"><label class="field__label">数量</label><input class="input" value="1000"></div>
+            </div>
+            <div class="subtle-divider"></div>
+            <div class="field">
+              <label class="field__label">审批说明</label>
+              <textarea class="text-area">该笔交易用于对冲 10Y 仓位暴露，审批完成后允许进入策略池。</textarea>
+            </div>
+            <div class="form-actions-inline" style="margin-top: 14px;">
+              <button class="button">取消</button>
+              <button class="button button--primary">加入列表</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="flex: 1;">
+          <div class="panel__header">
+            <div class="panel__title">待提交列表</div>
+            <div class="toolbar__group">
+              <button class="button button--sm">校验</button>
+              <button class="button button--sm button--primary">提交审批</button>
+            </div>
+          </div>
+          <div class="panel__body" style="padding: 0;">
+            <table class="dense-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px;">#</th>
+                  <th style="width: 88px;">债券代码</th>
+                  <th>债券简称</th>
+                  <th style="width: 80px;">方向</th>
+                  <th style="width: 80px;">收益率</th>
+                  <th style="width: 72px;">数量</th>
+                  <th style="width: 88px;">校验</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="is-selected"><td>1</td><td>240215</td><td>24附息国债15</td><td>买入</td><td class="text-up">1.8950</td><td>1000</td><td><span class="tag tag--running">通过</span></td></tr>
+                <tr><td>2</td><td>240013</td><td>24国开13</td><td>卖出</td><td class="text-down">2.1210</td><td>500</td><td><span class="tag tag--warn">待复核</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">校验反馈</div>
+          </div>
+          <div class="panel__body">
+            <div class="message-card">
+              <div class="message-card__title">通过项</div>
+              <div class="message-card__meta">240215 流动性充足，风险指标在阈值内。</div>
+            </div>
+            <div class="message-card">
+              <div class="message-card__title">待复核项</div>
+              <div class="message-card__meta">240013 当前 Ofr 偏离参考估值 0.8bp，建议二次确认。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">设计约束</div>
+          </div>
+          <div class="panel__body">
+            <ul class="bullet-list">
+              <li>操作页通常是表单加表格的双区域组合。</li>
+              <li>录入区和待提交列表必须同屏，减少来回切页。</li>
+              <li>校验反馈不要藏在 toast 里，应有稳定的可查看区域。</li>
+              <li>主按钮只保留一个，如“提交审批”或“保存”。</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

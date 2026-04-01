@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 审批详情</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">标准审批页</div>
+      </div>
+      <div class="titlebar__right">
+        <span class="pill">适用: 期货审批 / 风控复核 / 特殊交易审批</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <input class="input" style="width:190px;" value="审批单号 / 债券代码">
+        <select class="select" style="width:120px;"><option>审批状态</option></select>
+        <button class="button button--ghost">查询</button>
+      </div>
+      <div class="toolbar__group">
+        <button class="button button--success">通过</button>
+        <button class="button button--warn">退回修改</button>
+        <button class="button button--danger">拒绝</button>
+      </div>
+    </div>
+
+    <div class="split-layout split-layout--3" style="flex:1;">
+      <section class="stack">
+        <div class="panel" style="flex:1;">
+          <div class="panel__header">
+            <div class="panel__title">审批列表</div>
+          </div>
+          <div class="panel__body" style="padding:0;">
+            <table class="dense-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th style="width:120px;">审批单号</th>
+                  <th style="width:88px;">债券代码</th>
+                  <th>债券简称</th>
+                  <th style="width:80px;">状态</th>
+                  <th style="width:96px;">申请人</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="is-selected"><td>1</td><td>FT-20260327-001</td><td>240215</td><td>24附息国债15</td><td><span class="tag tag--warn">待审批</span></td><td>trader001</td></tr>
+                <tr><td>2</td><td>FT-20260327-002</td><td>240013</td><td>24国开13</td><td><span class="tag tag--running">已通过</span></td><td>trader002</td></tr>
+                <tr><td>3</td><td>FT-20260327-003</td><td>230023</td><td>23进出23</td><td><span class="tag tag--risk">已拒绝</span></td><td>trader003</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">审批详情</div>
+          </div>
+          <div class="panel__body">
+            <div class="metric-row"><span>审批单号</span><strong>FT-20260327-001</strong><span class="tag tag--warn">待审批</span></div>
+            <div class="metric-row"><span>申请人</span><strong>trader001</strong><span>申请时间 14:21:08</span></div>
+            <div class="metric-row"><span>交易方向</span><strong>买入</strong><span>数量 1000</span></div>
+            <div class="metric-row"><span>价格/收益率</span><strong>1.8950</strong><span>T+1</span></div>
+            <div class="subtle-divider"></div>
+            <div class="field">
+              <label class="field__label">申请理由</label>
+              <textarea class="text-area">用于策略临时补仓，对冲 10Y 暴露风险，需审批放行。</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="flex:1;">
+          <div class="panel__header">
+            <div class="panel__title">审批轨迹</div>
+          </div>
+          <div class="panel__body quick-actions">
+            <div class="quick-card">
+              <div class="quick-card__title">14:21:08 / 提交申请</div>
+              <div class="quick-card__meta">trader001 提交审批申请。</div>
+            </div>
+            <div class="quick-card">
+              <div class="quick-card__title">14:21:15 / 风控预校验</div>
+              <div class="quick-card__meta">系统提示价差偏离 0.6bp，进入人工复核。</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">审批意见</div>
+          </div>
+          <div class="panel__body">
+            <div class="field">
+              <label class="field__label">处理意见</label>
+              <textarea class="text-area">风险可控，同意放行，并记录此次临时偏离原因。</textarea>
+            </div>
+            <div class="form-actions-inline" style="margin-top:14px;">
+              <button class="button">保存意见</button>
+              <button class="button button--success">审批通过</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">页面约束</div>
+          </div>
+          <div class="panel__body">
+            <ul class="bullet-list">
+              <li>审批页必须同时看到列表、详情和意见区。</li>
+              <li>审批状态、轨迹和处理按钮优先级高于装饰性信息。</li>
+              <li>不建议把审批轨迹做成大面积流程图。</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

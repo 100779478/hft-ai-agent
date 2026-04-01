@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 设置页面</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">标准设置页</div>
+      </div>
+      <div class="titlebar__right">
+        <span class="pill">适用: 全局设置 / 默认参数 / 提醒设置</span>
+      </div>
+    </header>
+
+    <div class="settings-shell">
+      <aside class="panel panel--flush settings-nav">
+        <div class="settings-nav__item is-active">全局交易参数</div>
+        <div class="settings-nav__item">手工单默认值</div>
+        <div class="settings-nav__item">自动策略默认值</div>
+        <div class="settings-nav__item">消息与提醒</div>
+        <div class="settings-nav__item">密码与安全</div>
+      </aside>
+
+      <main class="panel panel--flush scroll-region">
+        <div class="panel__header">
+          <div class="panel__title">全局交易参数</div>
+          <div class="toolbar__group">
+            <button class="button">取消</button>
+            <button class="button button--primary">保存设置</button>
+          </div>
+        </div>
+        <div class="panel__body">
+          <div class="two-column-form">
+            <div class="field"><label class="field__label">默认 Bid 数量</label><input class="input" value="10"></div>
+            <div class="field"><label class="field__label">默认 Ofr 数量</label><input class="input" value="20"></div>
+            <div class="field"><label class="field__label">策略运行中允许改参</label><select class="select"><option>否</option></select></div>
+            <div class="field"><label class="field__label">模板导入类型</label><select class="select"><option>债券代码</option></select></div>
+            <div class="field"><label class="field__label">自动更新地址</label><input class="input" value="http://127.0.0.1/update"></div>
+            <div class="field"><label class="field__label">RPC 服务</label><input class="input" value="106.12.182.253:30902"></div>
+          </div>
+
+          <div class="subtle-divider"></div>
+
+          <div class="panel" style="box-shadow: none;">
+            <div class="panel__header"><div class="panel__title">市场规则约束</div></div>
+            <div class="panel__body">
+              <div class="three-column-form">
+                <div class="field"><label class="field__label">新债最小报单量</label><input class="input" value="10"></div>
+                <div class="field"><label class="field__label">新债最大报单量</label><input class="input" value="100000"></div>
+                <div class="field"><label class="field__label">新债报单倍数</label><input class="input" value="10"></div>
+                <div class="field"><label class="field__label">固收最小报单量</label><input class="input" value="10"></div>
+                <div class="field"><label class="field__label">固收最大报单量</label><input class="input" value="100000"></div>
+                <div class="field"><label class="field__label">固收报单倍数</label><input class="input" value="10"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page-note">设置页仍然是工作台内的密集配置页，不是移动端偏好设置界面。导航靠左，表单靠右，底部不做超大留白。</div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

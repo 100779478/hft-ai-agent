@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 壳层工作台</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">西部固收 HFT 工作台</div>
+        <div class="title-hint">主工作台参考 / 壳层标准页</div>
+      </div>
+      <div class="titlebar__meta">
+        <span class="status-pill status-pill--online"><span class="status-dot"></span>Trade Connected</span>
+        <span class="status-pill status-pill--online"><span class="status-dot"></span>Market Connected</span>
+        <span class="pill">2026-03-25 20:48</span>
+      </div>
+      <div class="window-controls"><span>-</span><span>[]</span><span>x</span></div>
+    </header>
+
+    <div class="workspace-frame page-shell__content">
+      <aside class="scene-nav">
+        <div class="scene-nav__button"><strong>T</strong><span>交易</span></div>
+        <div class="scene-nav__button is-active"><strong>BI</strong><span>双边</span></div>
+        <div class="scene-nav__button"><strong>R</strong><span>新债</span></div>
+        <div class="scene-nav__button"><strong>FI</strong><span>固收</span></div>
+        <div class="scene-nav__button"><strong>S</strong><span>策略</span></div>
+        <div class="scene-nav__button"><strong>RK</strong><span>风控</span></div>
+      </aside>
+
+      <main class="center-stage">
+        <div class="tabs-strip">
+          <div class="tab is-active">双边报价列表</div>
+          <div class="tab">CFETS综合最优行情</div>
+          <div class="tab">双边委托表</div>
+          <div class="tab">做市义务统计</div>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar__group">
+            <span class="toolbar-label">当前场景</span>
+            <span class="pill">双边做市 / 交易员视角</span>
+            <button class="button button--ghost">恢复布局</button>
+            <button class="button button--ghost">保存布局</button>
+          </div>
+          <div class="toolbar__group">
+            <span class="status-pill status-pill--warning"><span class="status-dot"></span>2 条风控待处理</span>
+            <span class="status-pill"><span class="status-dot"></span>5 条未读消息</span>
+          </div>
+        </div>
+
+        <div class="split-layout split-layout--3">
+          <section class="stack">
+            <div class="panel" style="flex: 1;">
+              <div class="panel__header">
+                <div class="panel__title">工作区 A / 高频主列表</div>
+                <div class="toolbar__group">
+                  <button class="button button--sm button--ghost">筛选</button>
+                  <button class="button button--sm button--ghost">导出</button>
+                </div>
+              </div>
+              <div class="panel__body" style="padding: 0;">
+                <table class="dense-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 88px;">债券代码</th>
+                      <th>债券简称</th>
+                      <th style="width: 72px;">分组</th>
+                      <th style="width: 88px;">状态</th>
+                      <th style="width: 80px;">Bid YTM</th>
+                      <th style="width: 80px;">Ofr YTM</th>
+                      <th style="width: 80px;">Bid 量</th>
+                      <th style="width: 80px;">Ofr 量</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="is-selected">
+                      <td>240215</td>
+                      <td>24附息国债15</td>
+                      <td>活跃券</td>
+                      <td><span class="tag tag--running">运行中</span></td>
+                      <td class="text-up">1.8950</td>
+                      <td class="text-down">1.9020</td>
+                      <td>5,000</td>
+                      <td>5,000</td>
+                    </tr>
+                    <tr>
+                      <td>240013</td>
+                      <td>24国开13</td>
+                      <td>重点</td>
+                      <td><span class="tag tag--warn">待复核</span></td>
+                      <td class="text-up">2.1130</td>
+                      <td class="text-down">2.1210</td>
+                      <td>3,000</td>
+                      <td>3,000</td>
+                    </tr>
+                    <tr>
+                      <td>230023</td>
+                      <td>23进出23</td>
+                      <td>宽客</td>
+                      <td><span class="tag tag--stopped">已暂停</span></td>
+                      <td class="text-up">2.2425</td>
+                      <td class="text-down">2.2515</td>
+                      <td>2,000</td>
+                      <td>2,000</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel__header">
+                <div class="panel__title">工作区 B / 关联行情</div>
+              </div>
+              <div class="panel__body">
+                <div class="stats-grid">
+                  <div class="stat-card">
+                    <div class="stat-card__label">最优 Bid</div>
+                    <div class="stat-card__value text-up">1.8950</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-card__label">最优 Ofr</div>
+                    <div class="stat-card__value text-down">1.9020</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-card__label">成交笔数</div>
+                    <div class="stat-card__value">28</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-card__label">未读提醒</div>
+                    <div class="stat-card__value">3</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="stack">
+            <div class="panel" style="flex: 1;">
+              <div class="panel__header">
+                <div class="panel__title">工作区 C / 深度与逐笔</div>
+              </div>
+              <div class="panel__body">
+                <table class="price-ladder">
+                  <thead>
+                    <tr><th>Bid 量</th><th>Bid YTM</th><th>Ofr YTM</th><th>Ofr 量</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td class="bid">2000</td><td class="bid text-up">1.8950</td><td class="ask text-down">1.9020</td><td class="ask">3000</td></tr>
+                    <tr><td class="bid">1500</td><td class="bid text-up">1.8945</td><td class="ask text-down">1.9025</td><td class="ask">2500</td></tr>
+                    <tr><td class="bid">1200</td><td class="bid text-up">1.8940</td><td class="ask text-down">1.9030</td><td class="ask">1600</td></tr>
+                    <tr><td class="bid">900</td><td class="bid text-up">1.8935</td><td class="ask text-down">1.9035</td><td class="ask">1200</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel__header">
+                <div class="panel__title">工作区 D / 消息摘要</div>
+              </div>
+              <div class="panel__body">
+                <div class="message-card">
+                  <div class="message-card__title">风控提醒</div>
+                  <div class="message-card__meta">24附息国债15 当前价差接近阈值，建议复核策略参数。</div>
+                </div>
+                <div class="message-card">
+                  <div class="message-card__title">成交提醒</div>
+                  <div class="message-card__meta">策略实例 G2-07 已部分成交 2,000 万。</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="stack">
+            <div class="panel" style="flex: 1;">
+              <div class="panel__header">
+                <div class="panel__title">工作区 E / 参数摘要</div>
+              </div>
+              <div class="panel__body">
+                <div class="properties-list">
+                  <div class="property-card">
+                    <div class="property-card__title">默认成交后补单</div>
+                    <div class="property-card__meta">开启 / 量级 1000 / 容差 0.5bp</div>
+                  </div>
+                  <div class="property-card">
+                    <div class="property-card__title">风险联动</div>
+                    <div class="property-card__meta">二次确认 + 声音提醒 + 未读标记</div>
+                  </div>
+                  <div class="property-card">
+                    <div class="property-card__title">布局模式</div>
+                    <div class="property-card__meta">双边默认布局 A / 已保存</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <aside class="right-rail">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">快捷操作</div>
+          </div>
+          <div class="panel__body quick-actions">
+            <div class="quick-card">
+              <div class="quick-card__title">银行间下单</div>
+              <div class="quick-card__meta">高频交易入口，适合作为右侧固定按钮区。</div>
+            </div>
+            <div class="quick-card">
+              <div class="quick-card__title">新债手工下单</div>
+              <div class="quick-card__meta">按权限出现，不属于左侧场景导航。</div>
+            </div>
+            <div class="quick-card">
+              <div class="quick-card__title">固收手工下单</div>
+              <div class="quick-card__meta">和新债保持同样的按钮形态和密度。</div>
+            </div>
+            <div class="quick-card">
+              <div class="quick-card__title">全局参数设置</div>
+              <div class="quick-card__meta">属于高频配置入口，应在右侧保持稳定位置。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">设计约束</div>
+          </div>
+          <div class="panel__body">
+            <ul class="bullet-list">
+              <li>保持多窗口工作台，不做单页大滚动布局。</li>
+              <li>左侧场景导航固定，右侧快捷区固定。</li>
+              <li>中央区域允许 Tab、分栏和不同业务页并存。</li>
+              <li>底部状态栏必须保留连接与时间信息。</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="statusbar">
+      <div class="statusbar__group">
+        <span>用户: trader001</span>
+        <span>交易日: 2026-03-25</span>
+        <span>布局: BI_Default_A</span>
+      </div>
+      <div class="statusbar__group">
+        <span>Server: Online</span>
+        <span>Trade: Online</span>
+        <span>Market: Online</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

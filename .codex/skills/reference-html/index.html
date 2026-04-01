@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HFT Client Standard Reference</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">HFT Client Standard Reference</div>
+        <span class="pill">V1 / HTML</span>
+      </div>
+      <div class="titlebar__right">
+        <span class="status-pill status-pill--online"><span class="status-dot"></span>Desktop Reference Ready</span>
+        <div class="window-controls"><span>-</span><span>[]</span><span>x</span></div>
+      </div>
+    </header>
+
+    <section class="page-intro">
+      <h1>标准页面参考包</h1>
+      <p>这套静态页面用于给产品经理和模型提供“接近现有客户端”的结构参考。目标不是还原真实业务逻辑，而是固化桌面交易工作台的页面骨架、密度、控件尺度、状态表达和多窗口工作方式。</p>
+    </section>
+
+    <section class="section-block">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card__label">参考页数量</div>
+          <div class="stat-card__value">11</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__label">标准按钮高度</div>
+          <div class="stat-card__value">28px</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__label">基础背景色</div>
+          <div class="stat-card__value">#0C1A36</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__label">风格关键词</div>
+          <div class="stat-card__value">Dense Desktop</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="link-grid">
+      <a class="link-card" href="./shell-workbench.html">
+        <div class="link-card__title">01 壳层工作台</div>
+        <div class="link-card__body">左侧场景导航、中央多窗口工作区、右侧快捷操作和底部状态栏的标准骨架。</div>
+      </a>
+      <a class="link-card" href="./page-table-standard.html">
+        <div class="link-card__title">02 标准表格页</div>
+        <div class="link-card__body">筛选条、批量操作、状态列、导入导出和高密度查询表格的标准参考。</div>
+      </a>
+      <a class="link-card" href="./page-market-standard.html">
+        <div class="link-card__title">03 标准行情页</div>
+        <div class="link-card__body">综合行情、深度梯队、明细联动和快速交易承接区的标准参考。</div>
+      </a>
+      <a class="link-card" href="./page-operation-standard.html">
+        <div class="link-card__title">04 标准操作页</div>
+        <div class="link-card__body">审批、白名单、手工录入等表单加表格混合页的标准参考。</div>
+      </a>
+      <a class="link-card" href="./page-strategy-standard.html">
+        <div class="link-card__title">05 标准策略页</div>
+        <div class="link-card__body">策略组、实例监控、批量启停、状态标签和参数入口的标准参考。</div>
+      </a>
+      <a class="link-card" href="./page-dialog-standard.html">
+        <div class="link-card__title">06 标准弹窗页</div>
+        <div class="link-card__body">筛选弹窗、确认弹窗和风险处理弹层的标准参考。</div>
+      </a>
+      <a class="link-card" href="./page-message-standard.html">
+        <div class="link-card__title">07 标准消息页</div>
+        <div class="link-card__body">消息盒子、消息详情、规则设置和未读优先的工作流标准页。</div>
+      </a>
+      <a class="link-card" href="./page-settings-standard.html">
+        <div class="link-card__title">08 标准设置页</div>
+        <div class="link-card__body">全局设置、默认参数、提醒和交易偏好类页面的标准参考。</div>
+      </a>
+      <a class="link-card" href="./page-whitelist-standard.html">
+        <div class="link-card__title">09 标准白名单页</div>
+        <div class="link-card__body">白名单维护、筛选、导入导出和右侧设置摘要的标准参考。</div>
+      </a>
+      <a class="link-card" href="./page-approval-standard.html">
+        <div class="link-card__title">10 标准审批页</div>
+        <div class="link-card__body">审批列表、审批详情、审批轨迹和处理意见区的标准参考。</div>
+      </a>
+      <a class="link-card" href="./page-board-standard.html">
+        <div class="link-card__title">11 标准行情看板页</div>
+        <div class="link-card__body">关注券、信号提醒、布局设置和综合行情块状展示的标准参考。</div>
+      </a>
+    </section>
+
+    <section class="section-block">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">使用规则</div>
+        </div>
+        <div class="panel__body">
+          <ul class="bullet-list">
+            <li>优先继承桌面工作台骨架，不要改造成普通网页后台或卡片流布局。</li>
+            <li>高频业务页优先采用表格驱动，筛选、排序、批量操作、导入导出应作为一级能力出现。</li>
+            <li>控件高度、间距、边框、状态标签和颜色语义必须继承 token。</li>
+            <li>需要显式考虑加载态、断连态、只读态、空态和无权限态。</li>
+            <li>允许替换业务字段和文案，不允许重构整体导航结构和信息密度。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">Prompt 模板</div>
+        </div>
+        <div class="panel__body">
+          <p style="margin: 0; color: var(--text-secondary);">产品经理可直接复用的 prompt 模板文档已生成到 `prompt-template.md`，建议把它和标准 HTML 页面一起发给做 vibe coding 的同学或模型。</p>
+          <div class="page-note" style="margin-top: 10px;">文件路径：`C:\hft\analysis\reference-html\prompt-template.md`</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="code-block">建议给产品经理/模型的固定提示词：
+
+请以 `shell-workbench.html` 和对应业务标准页作为唯一结构与视觉参考，生成新的页面。
+要求：
+1. 保持桌面交易客户端风格，不要改成通用网页后台。
+2. 保持高密度表格、深色工作台、左侧场景导航、顶部状态区和右侧快捷操作语言。
+3. 所有按钮、输入框、状态标签、表格表头、弹窗边框和消息提醒样式继承参考页。
+4. 可以替换业务字段和文案，但不能改变整体交互骨架。
+5. 页面必须包含加载态、空态、无权限态或只读态中的至少一种。</div>
+  </div>
+</body>
+</html>

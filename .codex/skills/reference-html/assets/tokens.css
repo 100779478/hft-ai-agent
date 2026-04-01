@@ -1,0 +1,81 @@
+:root {
+  --font-ui: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  --font-mono: "Cascadia Mono", "Consolas", monospace;
+
+  --bg-base: #0c1a36;
+  --bg-deep: #020d25;
+  --bg-header: #1d2b48;
+  --bg-panel: #102246;
+  --bg-panel-alt: #12274d;
+  --bg-panel-soft: #162b52;
+  --bg-tooltip: #2e3648;
+  --bg-selection: #5d6b99;
+  --bg-selection-soft: rgba(93, 107, 153, 0.3);
+  --bg-hover: rgba(72, 131, 201, 0.2);
+  --bg-overlay: rgba(2, 13, 37, 0.78);
+
+  --border-strong: #2c4067;
+  --border-default: #25385c;
+  --border-soft: #253659;
+  --border-muted: rgba(82, 120, 170, 0.22);
+
+  --text-primary: #ffebc8;
+  --text-default: rgba(255, 255, 255, 0.85);
+  --text-secondary: rgba(255, 255, 255, 0.68);
+  --text-disabled: rgba(255, 255, 255, 0.48);
+  --text-header: rgba(255, 255, 255, 0.92);
+  --text-selected: #f4f2f2;
+
+  --accent: #028cc1;
+  --accent-hover: #35a3cd;
+  --accent-pressed: #02709a;
+  --accent-disabled: #015474;
+
+  --button-neutral: #4b5a78;
+  --button-neutral-hover: #6f7b93;
+  --button-neutral-pressed: #3c4860;
+  --button-neutral-disabled: #2d3648;
+
+  --button-warn: #ff8a19;
+  --button-warn-hover: #ffa147;
+  --button-warn-pressed: #cc6e14;
+  --button-danger: #ff4444;
+  --button-danger-hover: #ff6969;
+  --button-danger-pressed: #cc3636;
+  --button-success: #16c75d;
+  --button-success-hover: #45d27d;
+  --button-success-pressed: #129f4a;
+
+  --price-up: #ec2626;
+  --price-down: #16c75d;
+  --price-neutral: #ce680d;
+  --price-alt: #59b8fe;
+  --price-gold: #c99f55;
+
+  --status-online: #16c75d;
+  --status-warning: #ffff00;
+  --status-offline: #ff4444;
+  --status-unknown: #555555;
+  --status-running: #22ff22;
+  --status-stopped: #8f97a8;
+
+  --sidebar-width: 76px;
+  --rightbar-width: 320px;
+  --titlebar-height: 38px;
+  --toolbar-height: 40px;
+  --tabs-height: 36px;
+  --statusbar-height: 30px;
+  --button-height: 28px;
+  --input-height: 28px;
+  --search-width: 190px;
+  --combo-width: 120px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.22);
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 20px;
+}

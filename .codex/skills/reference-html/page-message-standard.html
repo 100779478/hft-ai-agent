@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 消息中心</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">标准消息页</div>
+      </div>
+      <div class="titlebar__right">
+        <span class="pill">适用: 消息盒子 / 提醒中心 / 消息设置</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <button class="button button--ghost">全部</button>
+        <button class="button button--ghost">风控</button>
+        <button class="button button--ghost">成交</button>
+        <button class="button button--ghost">策略</button>
+      </div>
+      <div class="toolbar__group">
+        <button class="button">全部已读</button>
+        <button class="button button--primary">打开关联页面</button>
+      </div>
+    </div>
+
+    <div class="inbox-layout">
+      <section class="panel panel--flush scroll-region">
+        <div class="panel__header"><div class="panel__title">消息列表</div></div>
+        <div class="panel__body inbox-list">
+          <div class="message-item is-active">
+            <div class="message-card__title">风控提醒 / 14:25:10</div>
+            <div class="message-card__meta">24附息国债15 当前价差接近预警阈值。</div>
+          </div>
+          <div class="message-item">
+            <div class="message-card__title">成交提醒 / 14:24:52</div>
+            <div class="message-card__meta">策略实例 G2-07 已部分成交 2,000 万。</div>
+          </div>
+          <div class="message-item">
+            <div class="message-card__title">自动停止 / 14:24:01</div>
+            <div class="message-card__meta">IRS-02 因风控规则已自动停止。</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--flush scroll-region">
+        <div class="panel__header"><div class="panel__title">消息详情</div></div>
+        <div class="panel__body">
+          <div class="message-card">
+            <div class="message-card__title">风控提醒</div>
+            <div class="message-card__meta">类别: 交易员风控 / 来源: 双边报价列表 / 优先级: 高</div>
+          </div>
+          <div class="subtle-divider"></div>
+          <p style="margin: 0; color: var(--text-default);">24附息国债15 在 14:25:10 触发价差预警，当前 Bid / Ofr 与参考估值的偏离接近阈值。建议打开双边报价列表，检查当前参数、补单策略和白名单配置。</p>
+          <div class="subtle-divider"></div>
+          <div class="toolbar__group">
+            <button class="button button--primary">打开双边报价列表</button>
+            <button class="button">标记已读</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel panel--flush scroll-region">
+        <div class="panel__header"><div class="panel__title">消息规则设置</div></div>
+        <div class="panel__body">
+          <div class="list-row"><span>本方成交声音提示</span><span class="tag tag--running">开启</span></div>
+          <div class="list-row"><span>我的成交弹窗提示</span><span class="tag tag--running">开启</span></div>
+          <div class="list-row"><span>风控提醒未读标记</span><span class="tag tag--running">开启</span></div>
+          <div class="list-row"><span>自动关闭声音提示</span><span class="tag tag--warn">仅关键策略</span></div>
+          <div class="subtle-divider"></div>
+          <ul class="bullet-list">
+            <li>消息页不要设计成 IM 聊天界面。</li>
+            <li>优先级、来源、跳转目标要比头像或装饰更重要。</li>
+            <li>消息设置与消息详情应靠近，而不是放到另一套设置系统里。</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

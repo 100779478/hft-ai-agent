@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 行情看板</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">标准行情看板页</div>
+      </div>
+      <div class="titlebar__right">
+        <span class="pill">适用: 行情看板 / 关注券面板 / 订阅展示</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <button class="button button--ghost">默认布局</button>
+        <button class="button button--ghost">四宫格</button>
+        <button class="button button--ghost">关注券</button>
+        <button class="button">布局设置</button>
+      </div>
+      <div class="toolbar__group">
+        <span class="status-pill"><span class="status-dot"></span>订阅 24 只债券</span>
+        <button class="button button--primary">打开订阅表</button>
+      </div>
+    </div>
+
+    <div class="split-layout split-layout--2" style="flex:1;">
+      <section class="stack">
+        <div class="panel" style="flex:1;">
+          <div class="panel__header">
+            <div class="panel__title">综合看板</div>
+          </div>
+          <div class="panel__body">
+            <div class="grid-2">
+              <div class="dashboard-card">
+                <div class="dashboard-card__title">24附息国债15</div>
+                <div class="dashboard-card__text">最优 Bid <span class="text-up">1.8950</span> / 最优 Ofr <span class="text-down">1.9020</span></div>
+                <div class="page-note">成交 8 笔 / 关注级别 高</div>
+              </div>
+              <div class="dashboard-card">
+                <div class="dashboard-card__title">24国开13</div>
+                <div class="dashboard-card__text">最优 Bid <span class="text-up">2.1130</span> / 最优 Ofr <span class="text-down">2.1210</span></div>
+                <div class="page-note">成交 6 笔 / 关注级别 中</div>
+              </div>
+              <div class="dashboard-card">
+                <div class="dashboard-card__title">23进出23</div>
+                <div class="dashboard-card__text">最优 Bid <span class="text-up">2.2425</span> / 最优 Ofr <span class="text-down">2.2515</span></div>
+                <div class="page-note">成交 2 笔 / 关注级别 中</div>
+              </div>
+              <div class="dashboard-card">
+                <div class="dashboard-card__title">24农发10</div>
+                <div class="dashboard-card__text">最优 Bid <span class="text-up">2.3350</span> / 最优 Ofr <span class="text-down">2.3460</span></div>
+                <div class="page-note">成交 1 笔 / 关注级别 低</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">关注券列表</div>
+          </div>
+          <div class="panel__body list-panel">
+            <div class="list-panel__item is-active"><span>24附息国债15</span><span class="text-up">1.8950 / 1.9020</span></div>
+            <div class="list-panel__item"><span>24国开13</span><span class="text-up">2.1130 / 2.1210</span></div>
+            <div class="list-panel__item"><span>23进出23</span><span class="text-up">2.2425 / 2.2515</span></div>
+            <div class="list-panel__item"><span>24农发10</span><span class="text-up">2.3350 / 2.3460</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">看板信号</div>
+          </div>
+          <div class="panel__body quick-actions">
+            <div class="quick-card">
+              <div class="quick-card__title">风控信号</div>
+              <div class="quick-card__meta">24附息国债15 接近阈值，建议打开报价列表。</div>
+            </div>
+            <div class="quick-card">
+              <div class="quick-card__title">成交信号</div>
+              <div class="quick-card__meta">24国开13 刚产生一笔大额成交。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">页面约束</div>
+          </div>
+          <div class="panel__body">
+            <ul class="bullet-list">
+              <li>看板页仍属于交易工作台，不要设计成 BI 大屏。</li>
+              <li>看板可以块状展示，但必须保留交易语义和紧凑感。</li>
+              <li>关注券、信号、布局设置应围绕主看板形成固定结构。</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 弹窗与确认</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="modal-layer">
+    <div class="modal-backdrop"></div>
+
+    <div class="modal">
+      <div class="modal__header">
+        <div class="panel__title">筛选条件</div>
+        <div class="window-controls"><span>x</span></div>
+      </div>
+      <div class="modal__body">
+        <div class="three-column-form">
+          <div class="field"><label class="field__label">债券代码</label><input class="input" value="240215"></div>
+          <div class="field"><label class="field__label">市场</label><select class="select"><option>CFETS</option></select></div>
+          <div class="field"><label class="field__label">状态</label><select class="select"><option>全部</option></select></div>
+          <div class="field"><label class="field__label">期限下限</label><input class="input" value="5Y"></div>
+          <div class="field"><label class="field__label">期限上限</label><input class="input" value="10Y"></div>
+          <div class="field"><label class="field__label">分组</label><select class="select"><option>活跃券</option></select></div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <span class="title-hint">弹窗应窄而密，不应做成大面积营销式对话框。</span>
+        <div class="footer-actions">
+          <button class="button">重置</button>
+          <button class="button button--primary">应用筛选</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" style="width: min(720px, calc(100vw - 120px)); margin-top: 28px;">
+      <div class="modal__header">
+        <div class="panel__title">风险二次确认</div>
+        <div class="window-controls"><span>x</span></div>
+      </div>
+      <div class="modal__body">
+        <div class="message-card">
+          <div class="message-card__title">当前委托偏离参考估值 0.8bp</div>
+          <div class="message-card__meta">债券 240013 / 数量 500 / 卖出 / Ofr 2.1210。若继续提交，将触发交易员风控复核记录。</div>
+        </div>
+        <div class="subtle-divider"></div>
+        <div class="field">
+          <label class="field__label">确认说明</label>
+          <textarea class="text-area">已与交易员确认，该价差属于盘中正常波动，允许继续提交。</textarea>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <span class="status-pill status-pill--warning"><span class="status-dot"></span>需要保留操作痕迹</span>
+        <div class="footer-actions">
+          <button class="button">取消</button>
+          <button class="button button--danger">继续提交</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

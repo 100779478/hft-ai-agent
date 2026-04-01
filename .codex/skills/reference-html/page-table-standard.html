@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标准页 - 表格主页面</title>
+  <link rel="stylesheet" href="./assets/tokens.css">
+  <link rel="stylesheet" href="./assets/components.css">
+  <link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="titlebar__left">
+        <span class="titlebar__appmark"></span>
+        <div class="titlebar__name">标准表格页</div>
+      </div>
+      <div class="titlebar__right">
+        <span class="pill">适用: 双边报价 / 成交明细 / 持仓 / 白名单</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar__group">
+        <input class="input" style="width: 190px;" value="债券代码 / 债券简称">
+        <select class="select" style="width: 120px;"><option>策略状态</option></select>
+        <select class="select" style="width: 120px;"><option>分组</option></select>
+        <select class="select" style="width: 120px;"><option>期限</option></select>
+        <button class="button button--ghost">筛选</button>
+        <button class="button button--ghost">重置</button>
+      </div>
+      <div class="toolbar__group">
+        <button class="button button--primary">查询</button>
+        <button class="button">导出</button>
+      </div>
+    </div>
+
+    <div class="split-layout split-layout--2" style="flex: 1;">
+      <section class="stack">
+        <div class="panel" style="flex: 1;">
+          <div class="panel__header">
+            <div class="panel__title">批量操作区</div>
+            <div class="toolbar__group">
+              <button class="button button--success button--sm">启动</button>
+              <button class="button button--warn button--sm">暂停</button>
+              <button class="button button--danger button--sm">停止</button>
+              <button class="button button--sm">导入</button>
+              <button class="button button--sm">导出</button>
+            </div>
+          </div>
+          <div class="panel__body" style="padding: 0;">
+            <table class="dense-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px;">#</th>
+                  <th style="width: 88px;">债券代码</th>
+                  <th>债券简称</th>
+                  <th style="width: 84px;">分组</th>
+                  <th style="width: 96px;">运行状态</th>
+                  <th style="width: 80px;">Bid YTM</th>
+                  <th style="width: 80px;">Ofr YTM</th>
+                  <th style="width: 80px;">委托量</th>
+                  <th style="width: 80px;">成交量</th>
+                  <th style="width: 90px;">更新时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="is-selected">
+                  <td>1</td>
+                  <td>240215</td>
+                  <td>24附息国债15</td>
+                  <td>活跃券</td>
+                  <td><span class="tag tag--running">运行中</span></td>
+                  <td class="text-up">1.8950</td>
+                  <td class="text-down">1.9020</td>
+                  <td>5,000</td>
+                  <td>2,000</td>
+                  <td>14:25:08</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>240013</td>
+                  <td>24国开13</td>
+                  <td>核心</td>
+                  <td><span class="tag tag--warn">待复核</span></td>
+                  <td class="text-up">2.1130</td>
+                  <td class="text-down">2.1210</td>
+                  <td>3,000</td>
+                  <td>1,500</td>
+                  <td>14:25:05</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>230023</td>
+                  <td>23进出23</td>
+                  <td>宽客</td>
+                  <td><span class="tag tag--stopped">已暂停</span></td>
+                  <td class="text-up">2.2425</td>
+                  <td class="text-down">2.2515</td>
+                  <td>2,000</td>
+                  <td>0</td>
+                  <td>14:24:59</td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>240310</td>
+                  <td>24农发10</td>
+                  <td>观察</td>
+                  <td><span class="tag tag--risk">风控拦截</span></td>
+                  <td class="text-up">2.3350</td>
+                  <td class="text-down">2.3460</td>
+                  <td>1,000</td>
+                  <td>0</td>
+                  <td>14:24:31</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">当前选中项摘要</div>
+          </div>
+          <div class="panel__body">
+            <div class="metric-row"><span>债券代码</span><strong>240215</strong><span class="tag tag--running">运行中</span></div>
+            <div class="metric-row"><span>策略组</span><strong>活跃券 / 交易员组A</strong><span>自动</span></div>
+            <div class="metric-row"><span>风控状态</span><strong>正常</strong><span class="status-pill status-pill--online"><span class="status-dot"></span>已放行</span></div>
+            <div class="metric-row"><span>成交进度</span><div class="bar"><span style="width: 40%;"></span></div><span>40%</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">页面约束</div>
+          </div>
+          <div class="panel__body">
+            <ul class="bullet-list">
+              <li>表头固定深色背景，行高控制在 30px 左右。</li>
+              <li>筛选条必须紧贴表格，不要上移成大面积搜索区。</li>
+              <li>批量操作按钮保持同一行，不拆成浮动工具条。</li>
+              <li>右侧详情区可选，但不要改造成大卡片详情页。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div class="panel__title">空态示例</div>
+          </div>
+          <div class="panel__body">
+            <div class="empty-state">未查询到符合条件的数据。请调整分组、状态或债券代码后重试。</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>
