@@ -53,8 +53,11 @@ class CodexHttpTests(unittest.TestCase):
         self.assertIn("renderMarkdown", body)
         self.assertIn("createArtifactCard", body)
         self.assertIn("renderArtifactCards", body)
-        self.assertIn("Ctrl/Cmd + 回车发送", body)
-        self.assertIn(r'"D:\\hft-ai-agent"', body)
+        self.assertIn("openPreviewDrawer", body)
+        self.assertIn("previewDrawerFrame", body)
+        self.assertIn("Shift + 回车换行", body)
+        self.assertIn("const DEFAULT_CWD =", body)
+        self.assertIn("hft-ai-agent", body)
 
     def test_requirement_intake_skill_should_accumulate_context_and_stop_reasking(self) -> None:
         body = (PROJECT_ROOT / ".codex" / "skills" / "requirement_intake" / "SKILL.md").read_text(encoding="utf-8")
