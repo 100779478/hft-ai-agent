@@ -1,4 +1,5 @@
 import json
+import queue
 import subprocess
 import tempfile
 import unittest
@@ -9,6 +10,12 @@ from app.codex_http import ChatRequest, CodexExecRunner, PROJECT_ROOT, playgroun
 
 
 SESSION_UUID = "019d4250-293e-7182-88e1-be2e7449b847"
+
+NOISY_STDERR = (
+    "2026-04-01T10:02:01.452837Z ERROR codex_core::codex: failed to load skill D:\\hft-ai-agent\\.codex\\skills\\html_generation\\SKILL.md: missing YAML frontmatter delimited by ---\n"
+    "2026-04-01T10:02:02.199556Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: wss://api.zectai.com/v1/responses\n"
+    "ERROR: Reconnecting... 2/5\n"
+)
 
 
 class FakeStream:
@@ -24,6 +31,22 @@ class FakeStream:
         return None
 
 
+
+class FakeChunkStream:
+    def __init__(self, chunks: list[str]) -> None:
+        self._chunks = list(chunks)
+
+    def read(self, size: int = -1) -> str:
+        if not self._chunks:
+            return ""
+        chunk = self._chunks.pop(0)
+        if size >= 0 and len(chunk) > size:
+            self._chunks.insert(0, chunk[size:])
+            return chunk[:size]
+        return chunk
+
+    def close(self) -> None:
+        return None
 class FakePopen:
     def __init__(self, command, cwd, env, stdout, stderr, text, bufsize, encoding, errors):
         self.command = command
@@ -40,22 +63,55 @@ class FakePopen:
         self.returncode = -9
 
 
+class FakeNoisyPopen:
+    def __init__(self, command, cwd, env, stdout, stderr, text, bufsize, encoding, errors):
+        self.command = command
+        self.returncode = 0
+        self.stdout = FakeStream(["assistant reply\n"])
+        self.stderr = FakeStream([
+            "2026-04-01T10:02:01.452837Z ERROR codex_core::codex: failed to load skill D:\\hft-ai-agent\\.codex\\skills\\html_generation\\SKILL.md: missing YAML frontmatter delimited by ---\n",
+            "2026-04-01T10:02:02.199556Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: wss://api.zectai.com/v1/responses\n",
+            "ERROR: Reconnecting... 2/5\n",
+            "real warning\n",
+        ])
+        output_path = Path(command[command.index("--output-last-message") + 1])
+        output_path.write_text("OK", encoding="utf-8")
+
+    def wait(self, timeout=None):
+        return self.returncode
+
+    def kill(self):
+        self.returncode = -9
+
+
 class CodexHttpTests(unittest.TestCase):
     def test_playground_should_render_html_page(self) -> None:
         response = playground()
         body = response.body.decode("utf-8")
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("HTML 对话工作台", body)
+        self.assertIn("HTML &#x5bf9;&#x8bdd;&#x5de5;&#x4f5c;&#x53f0;", body)
         self.assertIn("/chat/stream", body)
         self.assertIn("customerid", body)
-        self.assertIn("当前用户", body)
+        self.assertIn("&#x5f53;&#x524d;&#x7528;&#x6237;", body)
         self.assertIn("renderMarkdown", body)
         self.assertIn("createArtifactCard", body)
         self.assertIn("renderArtifactCards", body)
         self.assertIn("openPreviewDrawer", body)
         self.assertIn("previewDrawerFrame", body)
-        self.assertIn("Shift + 回车换行", body)
+        self.assertIn("parseReplySegments", body)
+        self.assertIn("startTypewriter", body)
+        self.assertIn("cancelTypewriter", body)
+        self.assertIn("flushTypewriter", body)
+        self.assertIn("buildPendingMessage", body)
+        self.assertIn("renderPendingProgress", body)
+        self.assertIn('event.type==="ping"', body)
+        self.assertIn("elapsed_ms", body)
+        self.assertIn("Shift + &#x56de;&#x8f66;&#x6362;&#x884c;", body)
+        self.assertIn("--bg-base", body)
+        self.assertIn("\\u6b63\\u5728\\u7b49\\u5f85\\u6a21\\u578b\\u8fd4\\u56de", body)
+        self.assertIn("\\u6b63\\u5728\\u63a5\\u6536\\u6267\\u884c\\u8f93\\u51fa", body)
+        self.assertNotIn("\\u5904\\u7406\\u4e2d...\\\\n\\u6b63\\u5728\\u63a5\\u6536\\u6267\\u884c\\u8f93\\u51fa", body)
         self.assertIn("const DEFAULT_CWD =", body)
         self.assertIn("hft-ai-agent", body)
 
@@ -200,6 +256,44 @@ class CodexHttpTests(unittest.TestCase):
         self.assertEqual(response.exit_code, -1)
         self.assertIn("timed out", response.reply)
 
+    def test_run_chat_should_filter_recoverable_stderr_noise_on_success(self) -> None:
+        runner = CodexExecRunner(
+            codex_command="codex",
+            default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"),
+            dotenv_path=None,
+        )
+        request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent")
+
+        def fake_run(command, cwd, env, capture_output, text, encoding, errors, timeout):
+            output_path = Path(command[command.index("--output-last-message") + 1])
+            output_path.write_text("OK", encoding="utf-8")
+            return subprocess.CompletedProcess(args=command, returncode=0, stdout="", stderr=NOISY_STDERR + "real warning\n")
+
+        with patch("app.codex_http.subprocess.run", side_effect=fake_run):
+            response = runner.run_chat(request)
+
+        self.assertTrue(response.ok)
+        self.assertEqual(response.reply, "OK")
+        self.assertEqual(response.stderr, "real warning\n")
+
+    def test_run_chat_should_preserve_recoverable_stderr_noise_on_failure(self) -> None:
+        runner = CodexExecRunner(
+            codex_command="codex",
+            default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"),
+            dotenv_path=None,
+        )
+        request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent")
+
+        def fake_run(command, cwd, env, capture_output, text, encoding, errors, timeout):
+            return subprocess.CompletedProcess(args=command, returncode=1, stdout="", stderr=NOISY_STDERR)
+
+        with patch("app.codex_http.subprocess.run", side_effect=fake_run):
+            response = runner.run_chat(request)
+
+        self.assertFalse(response.ok)
+        self.assertIn("responses_websocket", response.stderr)
+        self.assertIn("missing YAML frontmatter", response.reply)
+
     def test_stream_chat_should_emit_progress_and_result(self) -> None:
         runner = CodexExecRunner(
             codex_command="codex",
@@ -220,6 +314,35 @@ class CodexHttpTests(unittest.TestCase):
         self.assertEqual(events[-1]["data"]["resume_mode"], "new")
         self.assertIsNone(events[-1]["data"]["session_id"])
         self.assertTrue(events[-1]["data"]["ok"])
+
+    def test_stream_chat_should_filter_recoverable_stderr_noise_on_success(self) -> None:
+        runner = CodexExecRunner(
+            codex_command="codex",
+            default_codex_home=Path("D:/hft-ai-agent/.codex-http-test"),
+            dotenv_path=None,
+        )
+        request = ChatRequest(message="Reply with OK", cwd="D:/hft-ai-agent")
+
+        with patch("app.codex_http.subprocess.Popen", new=FakeNoisyPopen):
+            events = [json.loads(line) for line in runner.stream_chat(request)]
+
+        stderr_events = [event for event in events if event["type"] == "stderr"]
+        self.assertEqual([event["data"] for event in stderr_events], ["real warning\n"])
+        self.assertEqual(events[-1]["data"]["stderr"], "real warning\n")
+        self.assertNotIn("responses_websocket", events[-1]["data"]["stderr"])
+
+    def test_pump_stream_should_emit_partial_chunks_without_newline(self) -> None:
+        runner = CodexExecRunner(codex_command="codex", dotenv_path=None)
+        output_queue: queue.Queue[tuple[str, str]] = queue.Queue()
+
+        runner._pump_stream(FakeChunkStream(["partial", " output"]), "stdout", output_queue)
+
+        events: list[tuple[str, str]] = []
+        while not output_queue.empty():
+            events.append(output_queue.get())
+
+        self.assertEqual(events[:-1], [("stdout", "partial"), ("stdout", " output")])
+        self.assertEqual(events[-1], ("stdout:done", ""))
 
     def test_run_chat_should_persist_customerid_alias_and_resume_with_real_session_id(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

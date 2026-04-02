@@ -23,11 +23,19 @@ DEFAULT_CWD = PROJECT_ROOT
 DEFAULT_PORT = 8010
 DEFAULT_DOTENV_PATH = PROJECT_ROOT / ".env"
 PLAYGROUND_HTML_PATH = PROJECT_ROOT / "app" / "chat_playground.html"
+STREAM_POLL_INTERVAL_SECONDS = 0.1
+STREAM_HEARTBEAT_SECONDS = 1.0
+STREAM_READ_CHUNK_SIZE = 1024
 SESSION_ID_OUTPUT_PATTERN = re.compile(
     r"session id:\s*([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
 )
 SESSION_ID_VALUE_PATTERN = re.compile(
     r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+)
+RECOVERABLE_STDERR_PATTERNS = (
+    re.compile(r"responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found"),
+    re.compile(r"^ERROR:\s+Reconnecting\.\.\.\s+\d+/\d+\s*$"),
+    re.compile(r"failed to load skill .*missing YAML frontmatter delimited by ---"),
 )
 
 
@@ -266,6 +274,7 @@ class CodexExecRunner:
             output_queue: queue.Queue[tuple[str, str]] = queue.Queue()
             stdout_chunks: list[str] = []
             stderr_chunks: list[str] = []
+            stderr_pending = ""
             threads = [
                 threading.Thread(target=self._pump_stream, args=(process.stdout, "stdout", output_queue), daemon=True),
                 threading.Thread(target=self._pump_stream, args=(process.stderr, "stderr", output_queue), daemon=True),
@@ -274,8 +283,10 @@ class CodexExecRunner:
                 thread.start()
 
             completed_streams = 0
+            last_progress_at = started_at
             while completed_streams < 2:
-                if time.perf_counter() - started_at > payload.timeout_seconds:
+                now = time.perf_counter()
+                if now - started_at > payload.timeout_seconds:
                     process.kill()
                     process.wait(timeout=5)
                     duration_ms = int((time.perf_counter() - started_at) * 1000)
@@ -299,8 +310,20 @@ class CodexExecRunner:
                     return
 
                 try:
-                    source, content = output_queue.get(timeout=0.1)
+                    source, content = output_queue.get(timeout=STREAM_POLL_INTERVAL_SECONDS)
                 except queue.Empty:
+                    now = time.perf_counter()
+                    if now - last_progress_at >= STREAM_HEARTBEAT_SECONDS:
+                        yield self._json_line({"type": "ping", "data": {"elapsed_ms": int((now - started_at) * 1000)}})
+                        last_progress_at = now
+                    continue
+
+                if source == "stderr:done":
+                    visible_chunks, stderr_pending = self._consume_visible_stderr(stderr_pending, finalize=True)
+                    for visible_chunk in visible_chunks:
+                        last_progress_at = time.perf_counter()
+                        yield self._json_line({"type": "stderr", "data": visible_chunk})
+                    completed_streams += 1
                     continue
 
                 if source.endswith(":done"):
@@ -309,9 +332,14 @@ class CodexExecRunner:
 
                 if source == "stdout":
                     stdout_chunks.append(content)
+                    last_progress_at = time.perf_counter()
+                    yield self._json_line({"type": source, "data": content})
                 else:
                     stderr_chunks.append(content)
-                yield self._json_line({"type": source, "data": content})
+                    visible_chunks, stderr_pending = self._consume_visible_stderr(stderr_pending + content)
+                    for visible_chunk in visible_chunks:
+                        last_progress_at = time.perf_counter()
+                        yield self._json_line({"type": source, "data": visible_chunk})
 
             exit_code = process.wait(timeout=5)
             duration_ms = int((time.perf_counter() - started_at) * 1000)
@@ -425,6 +453,12 @@ class CodexExecRunner:
         stdout: str,
         stderr: str,
     ) -> ChatResponse:
+        if exit_code == 0:
+            stderr = self._filter_recoverable_stderr(stderr)
+            if not stdout.strip():
+                filtered_reply = self._filter_recoverable_stderr(reply).strip()
+                if filtered_reply:
+                    reply = filtered_reply
         return ChatResponse(
             ok=exit_code == 0,
             reply=reply,
@@ -494,6 +528,31 @@ class CodexExecRunner:
         try:
             if stream is None:
                 return
+
+            buffered = getattr(stream, "buffer", None)
+            if buffered is not None and hasattr(buffered, "read1"):
+                encoding = getattr(stream, "encoding", None) or "utf-8"
+                errors = getattr(stream, "errors", None) or "replace"
+                while True:
+                    chunk = buffered.read1(STREAM_READ_CHUNK_SIZE)
+                    if chunk in (b"", ""):
+                        break
+                    text = chunk.decode(encoding, errors=errors) if isinstance(chunk, bytes) else str(chunk)
+                    if text:
+                        output_queue.put((source, text))
+                return
+
+            read = getattr(stream, "read", None)
+            if callable(read):
+                while True:
+                    chunk = read(STREAM_READ_CHUNK_SIZE)
+                    if chunk in ("", b""):
+                        break
+                    text = self._safe_output(chunk)
+                    if text:
+                        output_queue.put((source, text))
+                return
+
             while True:
                 line = stream.readline()
                 if line == "":
@@ -604,6 +663,38 @@ class CodexExecRunner:
         if isinstance(value, bytes):
             return value.decode("utf-8", errors="replace")
         return str(value)
+
+    def _is_recoverable_stderr_line(self, line: str) -> bool:
+        normalized = line.strip()
+        if not normalized:
+            return False
+        return any(pattern.search(normalized) for pattern in RECOVERABLE_STDERR_PATTERNS)
+
+    def _filter_recoverable_stderr(self, text: str) -> str:
+        if not text:
+            return text
+        filtered_lines = [line for line in text.splitlines(keepends=True) if not self._is_recoverable_stderr_line(line)]
+        filtered_text = "".join(filtered_lines)
+        return filtered_text.strip() if not filtered_text.strip() else filtered_text
+
+    def _consume_visible_stderr(self, buffer: str, *, finalize: bool = False) -> tuple[list[str], str]:
+        if not buffer:
+            return [], ""
+
+        lines: list[str] = []
+        while True:
+            newline_index = buffer.find("\n")
+            if newline_index < 0:
+                break
+            lines.append(buffer[: newline_index + 1])
+            buffer = buffer[newline_index + 1 :]
+
+        if finalize and buffer:
+            lines.append(buffer)
+            buffer = ""
+
+        visible_lines = [line for line in lines if not self._is_recoverable_stderr_line(line)]
+        return visible_lines, buffer
 
     def _combine_output(self, stdout: object, stderr: object) -> str:
         stdout_text = self._safe_output(stdout)
