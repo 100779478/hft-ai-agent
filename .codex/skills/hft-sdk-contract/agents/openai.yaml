@@ -1,0 +1,3 @@
+interface:
+  display_name: "HFT SDK 契约映射"
+  short_description: "先检索文档，再生成首版真实接口页面，缺字段则省略并说明"

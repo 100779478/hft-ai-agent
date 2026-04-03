@@ -1,0 +1,3 @@
+interface:
+  display_name: "HTML 成品交付"
+  short_description: "首版直接交付真实接口页面，不先给静态预览"

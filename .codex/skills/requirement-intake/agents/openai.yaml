@@ -1,0 +1,3 @@
+interface:
+  display_name: "需求补全"
+  short_description: "只基于接口文档确认页面、动作和字段"

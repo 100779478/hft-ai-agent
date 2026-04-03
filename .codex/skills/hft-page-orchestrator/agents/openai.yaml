@@ -1,0 +1,3 @@
+interface:
+  display_name: "HFT 页面编排"
+  short_description: "首版即接真实接口，缺字段则省略并说明，无文档依据则拒绝"
