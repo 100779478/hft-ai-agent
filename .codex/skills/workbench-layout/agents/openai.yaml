@@ -1,3 +1,4 @@
 interface:
   display_name: "工作台布局"
-  short_description: "提供一屏展示、内部滚动和 HFT 工作台视觉规则"
+  short_description: "统一 HFT 工作台页面的参考 HTML、布局密度和单文件原型约束"
+  default_prompt: "使用本 skill 时，先根据页面类型选择唯一主参考页，再结合 assets 样式与一屏布局规则生成高密度桌面工作台 HTML。"

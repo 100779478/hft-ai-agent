@@ -26,33 +26,39 @@
         <select class="select" style="width: 120px;"><option>策略状态</option></select>
         <select class="select" style="width: 120px;"><option>分组</option></select>
         <select class="select" style="width: 120px;"><option>期限</option></select>
-        <button class="button button--ghost">筛选</button>
-        <button class="button button--ghost">重置</button>
       </div>
-      <div class="toolbar__group">
-        <button class="button button--primary">查询</button>
-        <button class="button">导出</button>
+      <div class="toolbar__group" style="gap: 6px;">
+        <button class="button" style="width: 36px; padding: 0; background: linear-gradient(180deg, #5d6c88, #495a78); border-color: rgba(255,255,255,0.08);">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <rect x="1.5" y="1.5" width="15" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="1.4"/>
+            <path d="M9.6 5.4L6.1 9l3.5 3.6" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6.2 9h6.3" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="button" style="width: 36px; padding: 0; background: linear-gradient(180deg, #5d6c88, #495a78); border-color: rgba(255,255,255,0.08);">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <rect x="1.5" y="1.5" width="15" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="1.4"/>
+            <path d="M8.4 5.4L11.9 9l-3.5 3.6" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11.8 9H5.5" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="button">设置表头</button>
+        <div style="position: relative; width: 190px;">
+          <input class="input" style="width: 100%; padding-right: 28px;" value="">
+          <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.55); font-size: 12px;">⌕</span>
+        </div>
       </div>
     </div>
 
     <div class="split-layout split-layout--2" style="flex: 1;">
       <section class="stack">
         <div class="panel" style="flex: 1;">
-          <div class="panel__header">
-            <div class="panel__title">批量操作区</div>
-            <div class="toolbar__group">
-              <button class="button button--success button--sm">启动</button>
-              <button class="button button--warn button--sm">暂停</button>
-              <button class="button button--danger button--sm">停止</button>
-              <button class="button button--sm">导入</button>
-              <button class="button button--sm">导出</button>
-            </div>
-          </div>
           <div class="panel__body" style="padding: 0;">
             <table class="dense-table">
               <thead>
                 <tr>
                   <th style="width: 40px;">#</th>
+                  <th style="width: 34px; text-align: center;">□</th>
                   <th style="width: 88px;">债券代码</th>
                   <th>债券简称</th>
                   <th style="width: 84px;">分组</th>
@@ -67,6 +73,7 @@
               <tbody>
                 <tr class="is-selected">
                   <td>1</td>
+                  <td style="text-align: center;">□</td>
                   <td>240215</td>
                   <td>24附息国债15</td>
                   <td>活跃券</td>
@@ -79,6 +86,7 @@
                 </tr>
                 <tr>
                   <td>2</td>
+                  <td style="text-align: center;">□</td>
                   <td>240013</td>
                   <td>24国开13</td>
                   <td>核心</td>
@@ -91,6 +99,7 @@
                 </tr>
                 <tr>
                   <td>3</td>
+                  <td style="text-align: center;">□</td>
                   <td>230023</td>
                   <td>23进出23</td>
                   <td>宽客</td>
@@ -103,6 +112,7 @@
                 </tr>
                 <tr>
                   <td>4</td>
+                  <td style="text-align: center;">□</td>
                   <td>240310</td>
                   <td>24农发10</td>
                   <td>观察</td>
@@ -116,6 +126,12 @@
               </tbody>
             </table>
           </div>
+        </div>
+        <div style="display: flex; gap: 6px; padding: 0 0 0 6px; margin-top: -2px;">
+          <button class="button button--success button--sm">启动</button>
+          <button class="button button--warn button--sm">暂停</button>
+          <button class="button button--danger button--sm">停止</button>
+          <button class="button button--sm">删除</button>
         </div>
       </section>
 
