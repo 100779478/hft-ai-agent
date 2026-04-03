@@ -93,6 +93,21 @@ class HealthResponse(BaseModel):
     effective_openai_base_url: Optional[str]
 
 
+class SkillInfo(BaseModel):
+    name: str
+    description: Optional[str]
+    path: str
+    valid: bool
+    error: Optional[str] = None
+
+
+class SkillListResponse(BaseModel):
+    ok: bool
+    codex_home: str
+    skills_dir: str
+    skills: list[SkillInfo]
+
+
 class CodexExecRunner:
     def __init__(
         self,
@@ -148,9 +163,51 @@ class CodexExecRunner:
                 effective_openai_base_url=self._effective_openai_base_url(),
             )
 
+    def list_skills(self, codex_home_override: Optional[str] = None) -> SkillListResponse:
+        codex_home = self._resolve_codex_home(codex_home_override)
+        skills_dir = (codex_home / "skills") if codex_home is not None else (Path.home() / ".codex" / "skills")
+        skills: list[SkillInfo] = []
+
+        if skills_dir.exists():
+            for skill_dir in sorted((path for path in skills_dir.iterdir() if path.is_dir()), key=lambda path: path.name.lower()):
+                skill_file = skill_dir / "SKILL.md"
+                if not skill_file.exists():
+                    skills.append(
+                        SkillInfo(
+                            name=skill_dir.name,
+                            description=None,
+                            path=str(skill_file),
+                            valid=False,
+                            error="SKILL.md not found",
+                        )
+                    )
+                    continue
+                skills.append(self._read_skill_info(skill_file))
+
+        return SkillListResponse(
+            ok=True,
+            codex_home=self._display_codex_home(codex_home),
+            skills_dir=str(skills_dir),
+            skills=skills,
+        )
+
     def run_chat(self, payload: ChatRequest) -> ChatResponse:
         cwd = Path(payload.cwd).resolve() if payload.cwd else self.default_cwd.resolve()
         codex_home = self._resolve_codex_home(payload.codex_home)
+        if self._should_answer_skill_inventory(payload.message):
+            response = self._build_skill_inventory_response(cwd=cwd, codex_home=codex_home)
+            return self._build_chat_response(
+                cwd=cwd,
+                codex_home=codex_home,
+                command=["local", "skills"],
+                reply=response,
+                exit_code=0,
+                duration_ms=0,
+                resume_mode="new",
+                session_id=None,
+                stdout=response,
+                stderr="",
+            )
         resume_mode, resolved_session_id, session_alias = self._resolve_resume_target(payload, codex_home)
 
         with self._temporary_directory(codex_home) as temp_dir:
@@ -217,6 +274,34 @@ class CodexExecRunner:
     def stream_chat(self, payload: ChatRequest) -> Iterator[str]:
         cwd = Path(payload.cwd).resolve() if payload.cwd else self.default_cwd.resolve()
         codex_home = self._resolve_codex_home(payload.codex_home)
+        if self._should_answer_skill_inventory(payload.message):
+            response_text = self._build_skill_inventory_response(cwd=cwd, codex_home=codex_home)
+            yield self._json_line(
+                {
+                    "type": "start",
+                    "data": {
+                        "command": ["local", "skills"],
+                        "cwd": str(cwd),
+                        "codex_home": self._display_codex_home(codex_home),
+                        "resume_mode": "new",
+                    },
+                }
+            )
+            yield self._json_line({"type": "stdout", "data": response_text})
+            response = self._build_chat_response(
+                cwd=cwd,
+                codex_home=codex_home,
+                command=["local", "skills"],
+                reply=response_text,
+                exit_code=0,
+                duration_ms=0,
+                resume_mode="new",
+                session_id=None,
+                stdout=response_text,
+                stderr="",
+            )
+            yield self._json_line({"type": "result", "data": self._chat_response_to_dict(response)})
+            return
         resume_mode, resolved_session_id, session_alias = self._resolve_resume_target(payload, codex_home)
 
         with self._temporary_directory(codex_home) as temp_dir:
@@ -707,6 +792,114 @@ class CodexExecRunner:
             return ""
         return last_message_path.read_text(encoding="utf-8", errors="ignore").strip()
 
+    def _read_skill_info(self, skill_file: Path) -> SkillInfo:
+        content = skill_file.read_text(encoding="utf-8-sig", errors="ignore")
+        if not content.startswith("---"):
+            return SkillInfo(
+                name=skill_file.parent.name,
+                description=None,
+                path=str(skill_file),
+                valid=False,
+                error="missing YAML frontmatter delimited by ---",
+            )
+
+        lines = content.splitlines()
+        if not lines or lines[0].strip() != "---":
+            return SkillInfo(
+                name=skill_file.parent.name,
+                description=None,
+                path=str(skill_file),
+                valid=False,
+                error="invalid YAML frontmatter",
+            )
+
+        closing_index = None
+        for index, line in enumerate(lines[1:], start=1):
+            if line.strip() == "---":
+                closing_index = index
+                break
+
+        if closing_index is None:
+            return SkillInfo(
+                name=skill_file.parent.name,
+                description=None,
+                path=str(skill_file),
+                valid=False,
+                error="invalid YAML frontmatter",
+            )
+
+        name = skill_file.parent.name
+        description: Optional[str] = None
+        for raw_line in lines[1:closing_index]:
+            line = raw_line.strip()
+            if not line or ":" not in line:
+                continue
+            key, value = line.split(":", 1)
+            normalized_key = key.strip()
+            normalized_value = value.strip().strip("\"'")
+            if normalized_key == "name" and normalized_value:
+                name = normalized_value
+            elif normalized_key == "description" and normalized_value:
+                description = normalized_value
+
+        missing_fields: list[str] = []
+        if not name:
+            missing_fields.append("name")
+        if not description:
+            missing_fields.append("description")
+
+        if missing_fields:
+            return SkillInfo(
+                name=name or skill_file.parent.name,
+                description=description,
+                path=str(skill_file),
+                valid=False,
+                error=f"missing frontmatter field(s): {', '.join(missing_fields)}",
+            )
+
+        return SkillInfo(
+            name=name,
+            description=description,
+            path=str(skill_file),
+            valid=True,
+            error=None,
+        )
+
+    def _should_answer_skill_inventory(self, message: str) -> bool:
+        normalized = message.strip().lower()
+        patterns = (
+            "what skill",
+            "which skill",
+            "available skill",
+            "current skill",
+            "skill list",
+            "有什么skill",
+            "都有什么skill",
+            "当前有什么skill",
+            "当前都有什么skill",
+            "有哪些skill",
+            "技能列表",
+            "有什么技能",
+            "当前有什么技能",
+        )
+        return any(pattern in normalized for pattern in patterns)
+
+    def _build_skill_inventory_response(self, *, cwd: Path, codex_home: Optional[Path]) -> str:
+        inventory = self.list_skills(str(codex_home) if codex_home is not None else None)
+        visible_skills = [skill for skill in inventory.skills if skill.valid]
+        if not visible_skills:
+            return "当前本地没有可用的 skill。"
+
+        lines = [
+            f"当前本地可见 skill 共 {len(visible_skills)} 个，来自 {inventory.skills_dir}：",
+            "",
+        ]
+        for skill in visible_skills:
+            lines.append(f"- {skill.name}")
+            if skill.description:
+                lines.append(f"  {skill.description}")
+        return "\n".join(lines)
+
     def _resolve_codex_command(self, configured: Optional[str]) -> str:
         if configured:
             return configured
@@ -786,6 +979,11 @@ def playground() -> HTMLResponse:
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return runner.health()
+
+
+@app.get("/internal/skills", response_model=SkillListResponse, include_in_schema=False)
+def list_skills(codex_home: Optional[str] = None) -> SkillListResponse:
+    return runner.list_skills(codex_home)
 
 
 @app.post("/chat", response_model=ChatResponse)

@@ -199,9 +199,11 @@ http://127.0.0.1:8010/
 
 当前项目自定义 skills 示例：
 
-- [`.codex/skills/requirement_intake/SKILL.md`](/D:/hft-ai-agent/.codex/skills/requirement_intake/SKILL.md)
-- [`.codex/skills/html_generation/SKILL.md`](/D:/hft-ai-agent/.codex/skills/html_generation/SKILL.md)
-- [`.codex/skills/hft_sdk_contract/SKILL.md`](/D:/hft-ai-agent/.codex/skills/hft_sdk_contract/SKILL.md)
+- [`.codex/skills/hft-page-orchestrator/SKILL.md`](/D:/hft-ai-agent/.codex/skills/hft-page-orchestrator/SKILL.md)
+- [`.codex/skills/requirement-intake/SKILL.md`](/D:/hft-ai-agent/.codex/skills/requirement-intake/SKILL.md)
+- [`.codex/skills/reference-html/SKILL.md`](/D:/hft-ai-agent/.codex/skills/reference-html/SKILL.md)
+- [`.codex/skills/hft-sdk-contract/SKILL.md`](/D:/hft-ai-agent/.codex/skills/hft-sdk-contract/SKILL.md)
+- [`.codex/skills/html-artifact-delivery/SKILL.md`](/D:/hft-ai-agent/.codex/skills/html-artifact-delivery/SKILL.md)
 
 ## 常用测试命令
 
@@ -257,3 +259,5 @@ Invoke-WebRequest -UseBasicParsing -Method Post -ContentType 'application/json' 
 ### README 再次出现乱码
 
 请确认编辑器保存为 UTF-8 编码，不要使用 GBK 或 ANSI。
+
+

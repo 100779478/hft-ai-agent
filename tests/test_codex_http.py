@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from app.codex_http import ChatRequest, CodexExecRunner, PROJECT_ROOT, playground
+from app.codex_http import ChatRequest, CodexExecRunner, PROJECT_ROOT, list_skills, playground
 
 
 SESSION_UUID = "019d4250-293e-7182-88e1-be2e7449b847"
@@ -122,6 +122,38 @@ class CodexHttpTests(unittest.TestCase):
         self.assertIn("只允许一次性列出当前全部缺失项", body)
         self.assertIn("[INTAKE_COMPLETE]", body)
 
+    def test_list_skills_route_should_return_skill_inventory(self) -> None:
+        response = list_skills()
+
+        self.assertTrue(response.ok)
+        self.assertEqual(response.codex_home, str((PROJECT_ROOT / ".codex").resolve()))
+        self.assertTrue(any(skill.name == "page-requirement-confirmation" for skill in response.skills))
+
+    def test_run_chat_should_answer_skill_inventory_from_local_files(self) -> None:
+        runner = CodexExecRunner(codex_command="codex", default_codex_home=PROJECT_ROOT / ".codex", dotenv_path=None)
+
+        response = runner.run_chat(ChatRequest(message="\u6211\u5f53\u524d\u90fd\u6709\u4ec0\u4e48skill", cwd="D:/hft-ai-agent"))
+
+        self.assertTrue(response.ok)
+        self.assertEqual(response.command, ["local", "skills"])
+        self.assertIn("\u5f53\u524d\u672c\u5730\u53ef\u89c1 skill", response.reply)
+        self.assertIn("page-requirement-confirmation", response.reply)
+        self.assertIn("requirement_intake", response.reply)
+        self.assertIn("hft_sdk_contract", response.reply)
+        self.assertIn("html_generation", response.reply)
+
+    def test_stream_chat_should_answer_skill_inventory_from_local_files(self) -> None:
+        runner = CodexExecRunner(codex_command="codex", default_codex_home=PROJECT_ROOT / ".codex", dotenv_path=None)
+
+        events = [json.loads(line) for line in runner.stream_chat(ChatRequest(message="\u5f53\u524d\u6709\u4ec0\u4e48skill", cwd="D:/hft-ai-agent"))]
+
+        self.assertEqual(events[0]["type"], "start")
+        self.assertEqual(events[1]["type"], "stdout")
+        self.assertIn("page-requirement-confirmation", events[1]["data"])
+        self.assertIn("requirement_intake", events[1]["data"])
+        self.assertEqual(events[-1]["type"], "result")
+        self.assertEqual(events[-1]["data"]["command"], ["local", "skills"])
+
     def test_build_command_should_include_expected_flags(self) -> None:
         runner = CodexExecRunner(codex_command="codex", dotenv_path=None)
         request = ChatRequest(
@@ -150,6 +182,32 @@ class CodexHttpTests(unittest.TestCase):
         self.assertIn("default", command)
         self.assertIn("--add-dir", command)
         self.assertIn("Reply with OK", command)
+
+    def test_list_skills_should_report_valid_and_invalid_skills(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            codex_home = Path(temp_dir) / ".codex"
+            valid_skill = codex_home / "skills" / "valid_skill" / "SKILL.md"
+            invalid_skill = codex_home / "skills" / "invalid_skill" / "SKILL.md"
+            valid_skill.parent.mkdir(parents=True, exist_ok=True)
+            invalid_skill.parent.mkdir(parents=True, exist_ok=True)
+            valid_skill.write_text(
+                "---\nname: valid-skill\ndescription: Valid skill\n---\n\n# Valid\n",
+                encoding="utf-8",
+            )
+            invalid_skill.write_text("# Invalid\n", encoding="utf-8")
+
+            runner = CodexExecRunner(codex_command="codex", default_codex_home=codex_home, dotenv_path=None)
+            response = runner.list_skills()
+
+        self.assertTrue(response.ok)
+        self.assertEqual(response.codex_home, str(codex_home.resolve()))
+        skills = {skill.name: skill for skill in response.skills}
+        self.assertIn("valid-skill", skills)
+        self.assertTrue(skills["valid-skill"].valid)
+        self.assertEqual(skills["valid-skill"].description, "Valid skill")
+        self.assertIn("invalid_skill", skills)
+        self.assertFalse(skills["invalid_skill"].valid)
+        self.assertIn("missing YAML frontmatter", skills["invalid_skill"].error)
 
     def test_default_codex_home_should_use_project_dot_codex(self) -> None:
         runner = CodexExecRunner(codex_command="codex", dotenv_path=None)
