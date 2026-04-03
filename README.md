@@ -1,4 +1,4 @@
-﻿# Codex HTTP Service
+# Codex HTTP Service
 
 这是一个本地 FastAPI 服务，用来把浏览器或 HTTP 请求转换成 `codex exec` 调用。
 
@@ -199,11 +199,11 @@ http://127.0.0.1:8010/
 
 当前项目自定义 skills 示例：
 
+- [`.codex/skills/page-generation-core/SKILL.md`](/D:/hft-ai-agent/.codex/skills/page-generation-core/SKILL.md)
+- [`.codex/skills/workbench-layout/SKILL.md`](/D:/hft-ai-agent/.codex/skills/workbench-layout/SKILL.md)
 - [`.codex/skills/hft-page-orchestrator/SKILL.md`](/D:/hft-ai-agent/.codex/skills/hft-page-orchestrator/SKILL.md)
-- [`.codex/skills/requirement-intake/SKILL.md`](/D:/hft-ai-agent/.codex/skills/requirement-intake/SKILL.md)
-- [`.codex/skills/reference-html/SKILL.md`](/D:/hft-ai-agent/.codex/skills/reference-html/SKILL.md)
 - [`.codex/skills/hft-sdk-contract/SKILL.md`](/D:/hft-ai-agent/.codex/skills/hft-sdk-contract/SKILL.md)
-- [`.codex/skills/html-artifact-delivery/SKILL.md`](/D:/hft-ai-agent/.codex/skills/html-artifact-delivery/SKILL.md)
+- [`.codex/skills/hft-sdk-contract/references/hft-sdk-api-reference.md`](/D:/hft-ai-agent/.codex/skills/hft-sdk-contract/references/hft-sdk-api-reference.md)
 
 ## 常用测试命令
 

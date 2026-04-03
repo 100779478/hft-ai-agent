@@ -1,0 +1,3 @@
+interface:
+  display_name: "页面生成通用流程"
+  short_description: "统一处理页面二次确认、友好沟通和正式 HTML 交付"

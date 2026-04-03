@@ -1,6 +1,10 @@
 # HFT SDK View Summary
 
-Use this file as a compact summary before reading the full SDK document.
+Use this file as a compact summary before reading the full API reference.
+
+## Full reference
+
+- Full API reference: [hft-sdk-api-reference.md](/D:/hft-ai-agent/.codex/skills/hft-sdk-contract/references/hft-sdk-api-reference.md)
 
 ## Base addresses
 

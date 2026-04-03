@@ -1,3 +1,3 @@
 interface:
   display_name: "HFT 页面编排"
-  short_description: "首版即接真实接口，缺字段则省略并说明，无文档依据则拒绝"
+  short_description: "串联通用页面流程、HFT 契约和工作台布局生成真实页面"

@@ -12,7 +12,7 @@ from app.codex_http import ChatRequest, CodexExecRunner, PROJECT_ROOT, list_skil
 SESSION_UUID = "019d4250-293e-7182-88e1-be2e7449b847"
 
 NOISY_STDERR = (
-    "2026-04-01T10:02:01.452837Z ERROR codex_core::codex: failed to load skill D:\\hft-ai-agent\\.codex\\skills\\html_generation\\SKILL.md: missing YAML frontmatter delimited by ---\n"
+    "2026-04-01T10:02:01.452837Z ERROR codex_core::codex: failed to load skill D:\\hft-ai-agent\\.codex\\skills\\page-generation-core\\SKILL.md: missing YAML frontmatter delimited by ---\n"
     "2026-04-01T10:02:02.199556Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: wss://api.zectai.com/v1/responses\n"
     "ERROR: Reconnecting... 2/5\n"
 )
@@ -69,7 +69,7 @@ class FakeNoisyPopen:
         self.returncode = 0
         self.stdout = FakeStream(["assistant reply\n"])
         self.stderr = FakeStream([
-            "2026-04-01T10:02:01.452837Z ERROR codex_core::codex: failed to load skill D:\\hft-ai-agent\\.codex\\skills\\html_generation\\SKILL.md: missing YAML frontmatter delimited by ---\n",
+            "2026-04-01T10:02:01.452837Z ERROR codex_core::codex: failed to load skill D:\\hft-ai-agent\\.codex\\skills\\page-generation-core\\SKILL.md: missing YAML frontmatter delimited by ---\n",
             "2026-04-01T10:02:02.199556Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: wss://api.zectai.com/v1/responses\n",
             "ERROR: Reconnecting... 2/5\n",
             "real warning\n",
@@ -116,18 +116,18 @@ class CodexHttpTests(unittest.TestCase):
         self.assertIn("hft-ai-agent", body)
 
     def test_requirement_intake_skill_should_accumulate_context_and_stop_reasking(self) -> None:
-        body = (PROJECT_ROOT / ".codex" / "skills" / "requirement_intake" / "SKILL.md").read_text(encoding="utf-8")
+        body = (PROJECT_ROOT / ".codex" / "skills" / "page-generation-core" / "SKILL.md").read_text(encoding="utf-8")
 
-        self.assertIn("始终合并当前轮与之前轮次里已经确认的信息", body)
-        self.assertIn("只允许一次性列出当前全部缺失项", body)
-        self.assertIn("[INTAKE_COMPLETE]", body)
+        self.assertIn("只要用户请求生成页面，就先做一次二次确认", body)
+        self.assertIn("不要对用户说内部执行细节", body)
+        self.assertIn("页面生成通用流程", body)
 
     def test_list_skills_route_should_return_skill_inventory(self) -> None:
         response = list_skills()
 
         self.assertTrue(response.ok)
         self.assertEqual(response.codex_home, str((PROJECT_ROOT / ".codex").resolve()))
-        self.assertTrue(any(skill.name == "page-requirement-confirmation" for skill in response.skills))
+        self.assertTrue(any(skill.name == "page-generation-core" for skill in response.skills))
 
     def test_run_chat_should_answer_skill_inventory_from_local_files(self) -> None:
         runner = CodexExecRunner(codex_command="codex", default_codex_home=PROJECT_ROOT / ".codex", dotenv_path=None)
@@ -137,10 +137,10 @@ class CodexHttpTests(unittest.TestCase):
         self.assertTrue(response.ok)
         self.assertEqual(response.command, ["local", "skills"])
         self.assertIn("\u5f53\u524d\u672c\u5730\u53ef\u89c1 skill", response.reply)
-        self.assertIn("page-requirement-confirmation", response.reply)
-        self.assertIn("requirement_intake", response.reply)
-        self.assertIn("hft_sdk_contract", response.reply)
-        self.assertIn("html_generation", response.reply)
+        self.assertIn("page-generation-core", response.reply)
+        self.assertIn("workbench-layout", response.reply)
+        self.assertIn("hft-sdk-contract", response.reply)
+        self.assertIn("hft-page-orchestrator", response.reply)
 
     def test_stream_chat_should_answer_skill_inventory_from_local_files(self) -> None:
         runner = CodexExecRunner(codex_command="codex", default_codex_home=PROJECT_ROOT / ".codex", dotenv_path=None)
@@ -149,8 +149,8 @@ class CodexHttpTests(unittest.TestCase):
 
         self.assertEqual(events[0]["type"], "start")
         self.assertEqual(events[1]["type"], "stdout")
-        self.assertIn("page-requirement-confirmation", events[1]["data"])
-        self.assertIn("requirement_intake", events[1]["data"])
+        self.assertIn("page-generation-core", events[1]["data"])
+        self.assertIn("workbench-layout", events[1]["data"])
         self.assertEqual(events[-1]["type"], "result")
         self.assertEqual(events[-1]["data"]["command"], ["local", "skills"])
 
