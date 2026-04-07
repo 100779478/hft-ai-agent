@@ -315,6 +315,11 @@ class CodexExecRunner:
             )
             env = self._build_env(codex_home)
             started_at = time.perf_counter()
+            current_phase = "starting_codex"
+            resume_phase_emitted = False
+            waiting_model_emitted = False
+            receiving_output_emitted = False
+
             yield self._json_line(
                 {
                     "type": "start",
@@ -326,6 +331,14 @@ class CodexExecRunner:
                     },
                 }
             )
+            yield self._json_line({
+                "type": "phase",
+                "data": {
+                    "name": current_phase,
+                    "elapsed_ms": 0,
+                    "resume_mode": resume_mode,
+                },
+            })
 
             try:
                 process = subprocess.Popen(
@@ -353,6 +366,7 @@ class CodexExecRunner:
                     stdout="",
                     stderr=str(exc),
                 )
+                yield self._json_line({"type": "phase", "data": {"name": "finalizing", "elapsed_ms": duration_ms, "resume_mode": resume_mode}})
                 yield self._json_line({"type": "result", "data": self._chat_response_to_dict(response)})
                 return
 
@@ -398,8 +412,26 @@ class CodexExecRunner:
                     source, content = output_queue.get(timeout=STREAM_POLL_INTERVAL_SECONDS)
                 except queue.Empty:
                     now = time.perf_counter()
+                    elapsed_ms = int((now - started_at) * 1000)
+                    if elapsed_ms >= STREAM_HEARTBEAT_SECONDS * 1000:
+                        if resume_mode in {"last", "session_id"} and not resume_phase_emitted:
+                            current_phase = "resuming_session"
+                            resume_phase_emitted = True
+                            yield self._json_line({"type": "phase", "data": {"name": current_phase, "elapsed_ms": elapsed_ms, "resume_mode": resume_mode}})
+                        elif not waiting_model_emitted and not receiving_output_emitted:
+                            current_phase = "waiting_model"
+                            waiting_model_emitted = True
+                            yield self._json_line({"type": "phase", "data": {"name": current_phase, "elapsed_ms": elapsed_ms, "resume_mode": resume_mode}})
                     if now - last_progress_at >= STREAM_HEARTBEAT_SECONDS:
-                        yield self._json_line({"type": "ping", "data": {"elapsed_ms": int((now - started_at) * 1000)}})
+                        if receiving_output_emitted:
+                            current_phase = "receiving_output"
+                        elif resume_mode in {"last", "session_id"} and not waiting_model_emitted and resume_phase_emitted:
+                            current_phase = "waiting_model"
+                            waiting_model_emitted = True
+                        elif waiting_model_emitted:
+                            current_phase = "waiting_model"
+                        yield self._json_line({"type": "ping", "data": {"elapsed_ms": elapsed_ms}})
+                        yield self._json_line({"type": "phase", "data": {"name": current_phase, "elapsed_ms": elapsed_ms, "resume_mode": resume_mode}})
                         last_progress_at = now
                     continue
 
@@ -418,10 +450,18 @@ class CodexExecRunner:
                 if source == "stdout":
                     stdout_chunks.append(content)
                     last_progress_at = time.perf_counter()
+                    if not receiving_output_emitted:
+                        receiving_output_emitted = True
+                        current_phase = "receiving_output"
+                        yield self._json_line({"type": "phase", "data": {"name": current_phase, "elapsed_ms": int((last_progress_at - started_at) * 1000), "resume_mode": resume_mode}})
                     yield self._json_line({"type": source, "data": content})
                 else:
                     stderr_chunks.append(content)
                     visible_chunks, stderr_pending = self._consume_visible_stderr(stderr_pending + content)
+                    if visible_chunks and not receiving_output_emitted:
+                        receiving_output_emitted = True
+                        current_phase = "receiving_output"
+                        yield self._json_line({"type": "phase", "data": {"name": current_phase, "elapsed_ms": int((time.perf_counter() - started_at) * 1000), "resume_mode": resume_mode}})
                     for visible_chunk in visible_chunks:
                         last_progress_at = time.perf_counter()
                         yield self._json_line({"type": source, "data": visible_chunk})
@@ -447,6 +487,7 @@ class CodexExecRunner:
                 stdout=stdout_text,
                 stderr=stderr_text,
             )
+            yield self._json_line({"type": "phase", "data": {"name": "finalizing", "elapsed_ms": duration_ms, "resume_mode": resume_mode}})
             yield self._json_line({"type": "result", "data": self._chat_response_to_dict(response)})
 
     def _build_command(
