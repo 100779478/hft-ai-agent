@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-
+# 这是一行注释
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CODEX_HOME: Optional[Path] = PROJECT_ROOT / ".codex"
 DEFAULT_CWD = PROJECT_ROOT
